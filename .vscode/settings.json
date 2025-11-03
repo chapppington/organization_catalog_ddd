@@ -44,6 +44,8 @@
     "PYTHONPATH",
     "PYTHONUNBUFFERED",
     "pyupgrade",
+    "selectinload",
+    "sessionmaker",
     "uvicorn",
     "venv",
     "virtualenvs"

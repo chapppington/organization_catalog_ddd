@@ -25,8 +25,6 @@ class ActivityEntity(BaseEntity):
         self._validate_nesting_level()
 
     def _validate_nesting_level(self):
-        """Validate that the activity nesting level does not exceed the maximum
-        allowed level."""
         max_level = config.max_activity_nesting_level
         level = self._calculate_nesting_level()
         if level > max_level:
@@ -36,7 +34,6 @@ class ActivityEntity(BaseEntity):
             )
 
     def _calculate_nesting_level(self) -> int:
-        """Calculate the nesting level of this activity in the hierarchy."""
         if self.parent is None:
             return 1
 

@@ -42,11 +42,9 @@ class Config(BaseSettings):
     @computed_field
     @property
     def postgres_connection_uri(self) -> str:
-        """Build PostgreSQL connection URI from components."""
-        return (
-            f"postgresql://{self.postgres_user}:{self.postgres_password}"
-            f"@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
-        )
+        """Build PostgreSQL connection URI from components to build SQLAlchemy
+        engine."""
+        return f"postgresql+asyncpg://{self.postgres_user}:{self.postgres_password}@{self.postgres_host}:{self.postgres_port}/{self.postgres_db}"
 
     model_config = SettingsConfigDict(
         env_file=".env",
