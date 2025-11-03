@@ -1,0 +1,58 @@
+{
+  "material-icon-theme.folders.associations": {
+    "docker_compose": "docker", // папка с иконкой докера
+    "domain": "core", // папка с иконкой ядра
+    "entities": "class",
+    "value_objects": "constant", // папка с иконкой 3 колонок 
+    "exceptions": "error", // папка с иконкой ошибки
+    "application": "app", // папка с иконкой приложения
+    "infrastructure": "server",
+    "logic": "rules",
+    "api": "json",
+    "app": "src", // папка с иконкой приложения
+    "queries": "class",
+    "mediator": "api",
+    "message_brokers": "mail", // папка с иконкой сообщений
+    "commands": "class",
+    "websockets": "less",
+    "converters": "ci", // папка с иконкой стрелок 
+  },
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "cSpell.words": [
+    "autoflake",
+    "BASICAUTH",
+    "BOOTSTRAPSERVERS",
+    "confluentinc",
+    "cursorignore",
+    "dbdata",
+    "docformatter",
+    "ipython",
+    "isort",
+    "libpq",
+    "mypy",
+    "nmap",
+    "provectuslabs",
+    "punq",
+    "pycache",
+    "pyproject",
+    "pytest",
+    "PYTHONDONTWRITEBYTECODE",
+    "PYTHONPATH",
+    "PYTHONUNBUFFERED",
+    "pyupgrade",
+    "uvicorn",
+    "venv",
+    "virtualenvs"
+  ],
+  "cSpell.language": "en",
+  "cSpell.ignoreRegExpList": [
+    "/[а-яА-ЯёЁ]+/g"
+  ],
+  "files.exclude": {
+    "**/__pycache__": true
+  }
+}
