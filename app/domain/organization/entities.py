@@ -52,6 +52,9 @@ class BuildingEntity(BaseEntity):
 @dataclass(eq=False)
 class OrganizationEntity(BaseEntity):
     name: OrganizationNameValueObject
-    phones: list[OrganizationPhoneValueObject] = field(default_factory=list)
     building: BuildingEntity
-    activities: list[ActivityEntity] = field(default_factory=list)
+    phones: list[OrganizationPhoneValueObject] = field(
+        default_factory=list,
+        kw_only=True,
+    )
+    activities: list[ActivityEntity] = field(default_factory=list, kw_only=True)
