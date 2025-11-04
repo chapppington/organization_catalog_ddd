@@ -36,32 +36,56 @@ from infrastructure.database.repositories.base import BaseSQLAlchemyRepository
 class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepository):
     async def add(self, organization: OrganizationEntity) -> None:
         """Добавляет новую организацию в базу данных."""
+        # Сохраняем ID activities отдельно, т.к. они уже существуют в БД
+        # и не должны обрабатываться SQLAlchemy при добавлении организации
+        activity_ids = (
+            [str(activity.oid) for activity in organization.activities]
+            if organization.activities
+            else []
+        )
+
+        # Отсоединяем building от его сессии и присоединяем к текущей
+        if organization.building:
+            organization.building = await self.session.merge(organization.building)
+
+        # Убираем activities из organization перед добавлением,
+        # чтобы SQLAlchemy не пытался управлять связями many-to-many
+        original_activities = organization.activities
+        organization.activities = []  # Очищаем список activities
+
         self.session.add(organization)
 
-        # Сохраняем телефоны отдельно
-        if organization.phones:
-            for phone in organization.phones:
-                await self.session.execute(
-                    ORGANIZATION_PHONES_TABLE.insert().values(
-                        id=uuid4(),
-                        organization_id=UUID(organization.oid),
-                        phone=phone.as_generic_type(),
-                    ),
-                )
-
-        # Сохраняем связи с видами деятельности
-        if organization.activities:
-            for activity in organization.activities:
-                await self.session.execute(
-                    ORGANIZATION_ACTIVITIES_TABLE.insert().values(
-                        organization_id=UUID(organization.oid),
-                        activity_id=UUID(activity.oid),
-                    ),
-                )
-
         try:
+            # Сначала сохраняем организацию, чтобы получить ID
             await self.session.flush([organization])
+
+            # Теперь можно добавлять телефоны и связи, т.к. организация уже в БД
+            # Сохраняем телефоны отдельно
+            if organization.phones:
+                for phone in organization.phones:
+                    await self.session.execute(
+                        ORGANIZATION_PHONES_TABLE.insert().values(
+                            id=uuid4(),
+                            organization_id=UUID(str(organization.oid)),
+                            phone=phone.as_generic_type(),
+                        ),
+                    )
+
+            # Сохраняем связи с видами деятельности (только INSERT, без создания activities)
+            if activity_ids:
+                for activity_id in activity_ids:
+                    await self.session.execute(
+                        ORGANIZATION_ACTIVITIES_TABLE.insert().values(
+                            organization_id=UUID(str(organization.oid)),
+                            activity_id=UUID(activity_id),
+                        ),
+                    )
+
             await self.session.commit()
+
+            # Восстанавливаем activities в объекте для возврата ПОСЛЕ commit,
+            # чтобы SQLAlchemy не пытался синхронизировать связи
+            organization.activities = original_activities
         except IntegrityError as err:
             await self.session.rollback()
             self._parse_error(err, organization)
@@ -137,7 +161,7 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
     async def _load_phones(self, organization: OrganizationEntity) -> None:
         """Загружает телефоны для организации."""
         stmt = select(ORGANIZATION_PHONES_TABLE.c.phone).where(
-            ORGANIZATION_PHONES_TABLE.c.organization_id == UUID(organization.oid),
+            ORGANIZATION_PHONES_TABLE.c.organization_id == UUID(str(organization.oid)),
         )
         result = await self.session.execute(stmt)
         phones = [row[0] for row in result]

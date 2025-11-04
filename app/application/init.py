@@ -67,16 +67,15 @@ def _init_container() -> Container:
     engine = build_sa_engine()
     session_factory = build_sa_session_factory(engine)
 
+    session = session_factory()
+
     def init_activity_repository() -> BaseActivityRepository:
-        session = session_factory()
         return ActivityRepository(session=session)
 
     def init_building_repository() -> BaseBuildingRepository:
-        session = session_factory()
         return BuildingRepository(session=session)
 
     def init_organization_repository() -> BaseOrganizationRepository:
-        session = session_factory()
         return OrganizationRepository(session=session)
 
     container.register(
