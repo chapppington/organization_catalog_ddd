@@ -34,12 +34,8 @@ class ActivityRepository(BaseSQLAlchemyRepository, BaseActivityRepository):
 
         # Фильтр по parent_id
         if filters.parent_id:
-            try:
-                parent_uuid = UUID(filters.parent_id)
-                query = query.where(ACTIVITIES_TABLE.c.parent_id == parent_uuid)
-            except (ValueError, AttributeError):
-                # Если parent_id невалидный UUID, возвращаем пустой результат
-                return []
+            parent_uuid = UUID(filters.parent_id)
+            query = query.where(ACTIVITIES_TABLE.c.parent_id == parent_uuid)
 
         result = await self.session.execute(query)
         return result.scalars().all()
