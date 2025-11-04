@@ -5,9 +5,16 @@ from sqlalchemy import (
     Table,
     UUID,
 )
-from sqlalchemy.orm import composite
+from sqlalchemy.orm import (
+    composite,
+    relationship,
+)
 
-from domain.organization.entities import OrganizationEntity
+from domain.organization.entities import (
+    ActivityEntity,
+    BuildingEntity,
+    OrganizationEntity,
+)
 from domain.organization.value_objects import OrganizationNameValueObject
 
 from .base import (
@@ -20,7 +27,7 @@ ORGANIZATIONS_TABLE = Table(
     "organizations",
     TimedBaseModel.metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("name", String, nullable=False),
+    Column("name", String, nullable=False, unique=True),
     Column(
         "building_id",
         UUID(as_uuid=True),
@@ -64,6 +71,16 @@ mapper_registry.map_imperatively(
     ORGANIZATIONS_TABLE,
     properties={
         "name": composite(OrganizationNameValueObject, ORGANIZATIONS_TABLE.c.name),
+        "building": relationship(
+            BuildingEntity,
+            foreign_keys=[ORGANIZATIONS_TABLE.c.building_id],
+            lazy="joined",
+        ),
+        "activities": relationship(
+            ActivityEntity,
+            secondary=ORGANIZATION_ACTIVITIES_TABLE,
+            lazy="joined",
+        ),
     },
     column_prefix="_",
 )

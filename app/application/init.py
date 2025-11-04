@@ -17,6 +17,7 @@ from application.commands.organization import (
     CreateOrganizationCommand,
     CreateOrganizationCommandHandler,
 )
+from application.common.interfaces.uow import UnitOfWork
 from application.mediator import Mediator
 from application.queries.organization import (
     GetOrganizationByIdQuery,
@@ -42,11 +43,14 @@ from domain.organization.services import (
     BuildingService,
     OrganizationService,
 )
-from infrastructure.database.repositories.dummy import (
-    DummyInMemoryActivityRepository,
-    DummyInMemoryBuildingRepository,
-    DummyInMemoryOrganizationRepository,
+from infrastructure.database.main import (
+    build_sa_engine,
+    build_sa_session_factory,
 )
+from infrastructure.database.repositories.activity import ActivityRepository
+from infrastructure.database.repositories.building import BuildingRepository
+from infrastructure.database.repositories.organization import OrganizationRepository
+from infrastructure.database.uow import SQLAlchemyUoW
 from settings.config import Config
 
 
@@ -57,25 +61,45 @@ def init_container():
 
 def _init_container() -> Container:
     container = Container()
-    container.register(Config, instance=Config(), scope=Scope.singleton)
 
-    # TODO заменить на реальные репозитории
+    # Регистрируем конфиг
+    config = Config()
+    container.register(Config, instance=config, scope=Scope.singleton)
+
+    engine = build_sa_engine()
+    session_factory = build_sa_session_factory(engine)
+
+    def init_uow() -> UnitOfWork:
+        session = session_factory()
+        return SQLAlchemyUoW(session=session)
+
+    def init_activity_repository(uow: UnitOfWork) -> BaseActivityRepository:
+        return ActivityRepository(_uow=uow)
+
+    def init_building_repository(uow: UnitOfWork) -> BaseBuildingRepository:
+        return BuildingRepository(_uow=uow)
+
+    def init_organization_repository(uow: UnitOfWork) -> BaseOrganizationRepository:
+        return OrganizationRepository(_uow=uow)
+
+    container.register(
+        UnitOfWork,
+        factory=init_uow,
+    )
+
     container.register(
         BaseOrganizationRepository,
-        DummyInMemoryOrganizationRepository,
-        scope=Scope.singleton,
+        factory=init_organization_repository,
     )
 
     container.register(
         BaseBuildingRepository,
-        DummyInMemoryBuildingRepository,
-        scope=Scope.singleton,
+        factory=init_building_repository,
     )
 
     container.register(
         BaseActivityRepository,
-        DummyInMemoryActivityRepository,
-        scope=Scope.singleton,
+        factory=init_activity_repository,
     )
 
     # Регистрируем доменные сервисы

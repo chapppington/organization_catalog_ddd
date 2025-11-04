@@ -19,3 +19,12 @@ class BuildingNotFoundException(LogicException):
     @property
     def message(self):
         return "Building with this ID not found."
+
+
+@dataclass(eq=False)
+class BuildingIdAlreadyExistsException(LogicException):
+    building_id: str
+
+    @property
+    def message(self):
+        return f"Building with ID {self.building_id} already exists."

@@ -23,7 +23,7 @@ BUILDINGS_TABLE = Table(
     "buildings",
     TimedBaseModel.metadata,
     Column("id", UUID(as_uuid=True), primary_key=True),
-    Column("address", String, nullable=False),
+    Column("address", String, nullable=False, unique=True),
     Column("latitude", Float, nullable=False),
     Column("longitude", Float, nullable=False),
 )

@@ -4,6 +4,7 @@ from application.commands.base import (
     BaseCommand,
     BaseCommandHandler,
 )
+from application.common.interfaces.uow import UnitOfWork
 from domain.organization.entities import OrganizationEntity
 from domain.organization.services import OrganizationService
 
@@ -21,11 +22,14 @@ class CreateOrganizationCommandHandler(
     BaseCommandHandler[CreateOrganizationCommand, OrganizationEntity],
 ):
     organization_service: OrganizationService
+    uow: UnitOfWork
 
     async def handle(self, command: CreateOrganizationCommand) -> OrganizationEntity:
-        return await self.organization_service.create_organization(
+        result = await self.organization_service.create_organization(
             name=command.name,
             address=command.address,
             phones=command.phones,
             activities=command.activities,
         )
+        await self.uow.commit()
+        return result

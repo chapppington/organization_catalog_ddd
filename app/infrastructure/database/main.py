@@ -1,6 +1,3 @@
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
-
 import orjson
 from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
@@ -12,8 +9,8 @@ from sqlalchemy.ext.asyncio import (
 from settings import config
 
 
-@asynccontextmanager
-async def build_sa_engine() -> AsyncGenerator[AsyncEngine, None]:
+def build_sa_engine() -> AsyncEngine:
+    """Создает SQLAlchemy async engine."""
     engine = create_async_engine(
         config.postgres_connection_uri,
         echo=True,
@@ -22,9 +19,7 @@ async def build_sa_engine() -> AsyncGenerator[AsyncEngine, None]:
         json_deserializer=orjson.loads,
         pool_size=50,
     )
-    yield engine
-
-    await engine.dispose()
+    return engine
 
 
 def build_sa_session_factory(engine: AsyncEngine) -> async_sessionmaker[AsyncSession]:

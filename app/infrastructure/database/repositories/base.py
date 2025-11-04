@@ -1,6 +1,15 @@
+from dataclasses import dataclass
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.common.interfaces.uow import UnitOfWork
 
+
+@dataclass
 class BaseSQLAlchemyRepository:
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+    _uow: UnitOfWork
+
+    @property
+    def session(self) -> AsyncSession:
+        """Возвращает сессию из Unit of Work."""
+        return self._uow.session

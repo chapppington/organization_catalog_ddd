@@ -22,3 +22,21 @@ class ActivityNotFoundException(LogicException):
     @property
     def message(self):
         return "Activity with this ID not found."
+
+
+@dataclass(eq=False)
+class ActivityIdAlreadyExistsException(LogicException):
+    activity_id: str
+
+    @property
+    def message(self):
+        return f"Activity with ID {self.activity_id} already exists."
+
+
+@dataclass(eq=False)
+class ParentActivityNotFoundException(LogicException):
+    parent_id: str
+
+    @property
+    def message(self):
+        return f"Parent activity with ID {self.parent_id} not found."
