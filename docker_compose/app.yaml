@@ -5,17 +5,17 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    container_name: organization-catalog-api
+    container_name: main-app
     ports:
       - "${API_PORT}:8000"
     depends_on:
-      postgres:
-        condition: service_healthy
-    command: "uvicorn --factory application.api.main:create_app --reload --host 0.0.0.0 --port 8000"
+      - postgres
+    command: "uvicorn --factory presentation.api.main:create_app --reload --host 0.0.0.0 --port 8000"
     env_file:
       - ../.env
     volumes:
       - ../app/:/app/
+      - ../alembic.ini:/app/alembic.ini
     networks:
       - backend
 

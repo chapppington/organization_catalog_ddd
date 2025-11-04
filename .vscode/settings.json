@@ -16,6 +16,7 @@
     "commands": "class",
     "websockets": "less",
     "converters": "ci", // папка с иконкой стрелок 
+    "migrations": "mappings",
   },
   "python.testing.pytestArgs": [
     "."
@@ -30,6 +31,7 @@
     "cursorignore",
     "dbdata",
     "docformatter",
+    "healthcheck",
     "ipython",
     "isort",
     "libpq",
