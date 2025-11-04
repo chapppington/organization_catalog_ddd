@@ -1,1 +1,143 @@
-# punq di container initialization
+from functools import lru_cache
+
+from punq import (
+    Container,
+    Scope,
+)
+
+from application.commands.organization import (
+    CreateActivityCommand,
+    CreateActivityCommandHandler,
+    CreateBuildingCommand,
+    CreateBuildingCommandHandler,
+    CreateOrganizationCommand,
+    CreateOrganizationCommandHandler,
+)
+from application.mediator import Mediator
+from application.queries.organization import (
+    GetOrganizationByIdQuery,
+    GetOrganizationByIdQueryHandler,
+    GetOrganizationsByActivityQuery,
+    GetOrganizationsByActivityQueryHandler,
+    GetOrganizationsByAddressQuery,
+    GetOrganizationsByAddressQueryHandler,
+    GetOrganizationsByRadiusQuery,
+    GetOrganizationsByRadiusQueryHandler,
+    GetOrganizationsByRectangleQuery,
+    GetOrganizationsByRectangleQueryHandler,
+    SearchOrganizationsByNameQuery,
+    SearchOrganizationsByNameQueryHandler,
+)
+from domain.organization.interfaces.repositories.activity import BaseActivityRepository
+from domain.organization.interfaces.repositories.building import BaseBuildingRepository
+from domain.organization.interfaces.repositories.organization import (
+    BaseOrganizationRepository,
+)
+from domain.organization.services import (
+    ActivityService,
+    BuildingService,
+    OrganizationService,
+)
+from infrastructure.database.repositories.dummy import (
+    DummyInMemoryActivityRepository,
+    DummyInMemoryBuildingRepository,
+    DummyInMemoryOrganizationRepository,
+)
+from settings.config import Config
+
+
+@lru_cache(1)
+def init_container():
+    return _init_container()
+
+
+def _init_container() -> Container:
+    container = Container()
+    container.register(Config, instance=Config(), scope=Scope.singleton)
+
+    # TODO заменить на реальные репозитории
+    container.register(
+        BaseOrganizationRepository,
+        DummyInMemoryOrganizationRepository,
+        scope=Scope.singleton,
+    )
+
+    container.register(
+        BaseBuildingRepository,
+        DummyInMemoryBuildingRepository,
+        scope=Scope.singleton,
+    )
+
+    container.register(
+        BaseActivityRepository,
+        DummyInMemoryActivityRepository,
+        scope=Scope.singleton,
+    )
+
+    # Регистрируем доменные сервисы
+    container.register(BuildingService, scope=Scope.singleton)
+    container.register(ActivityService, scope=Scope.singleton)
+    container.register(OrganizationService, scope=Scope.singleton)
+
+    # Регистрируем command handlers
+    container.register(CreateBuildingCommandHandler)
+    container.register(CreateActivityCommandHandler)
+    container.register(CreateOrganizationCommandHandler)
+
+    # Регистрируем query handlers
+    container.register(GetOrganizationByIdQueryHandler)
+    container.register(GetOrganizationsByAddressQueryHandler)
+    container.register(GetOrganizationsByActivityQueryHandler)
+    container.register(SearchOrganizationsByNameQueryHandler)
+    container.register(GetOrganizationsByRadiusQueryHandler)
+    container.register(GetOrganizationsByRectangleQueryHandler)
+
+    # Инициализируем медиатор
+    def init_mediator() -> Mediator:
+        mediator = Mediator()
+
+        # Регистрируем commands
+        mediator.register_command(
+            CreateBuildingCommand,
+            [container.resolve(CreateBuildingCommandHandler)],
+        )
+        mediator.register_command(
+            CreateActivityCommand,
+            [container.resolve(CreateActivityCommandHandler)],
+        )
+        mediator.register_command(
+            CreateOrganizationCommand,
+            [container.resolve(CreateOrganizationCommandHandler)],
+        )
+
+        # Регистрируем queries
+        mediator.register_query(
+            GetOrganizationByIdQuery,
+            container.resolve(GetOrganizationByIdQueryHandler),
+        )
+        mediator.register_query(
+            GetOrganizationsByAddressQuery,
+            container.resolve(GetOrganizationsByAddressQueryHandler),
+        )
+        mediator.register_query(
+            GetOrganizationsByActivityQuery,
+            container.resolve(GetOrganizationsByActivityQueryHandler),
+        )
+        mediator.register_query(
+            SearchOrganizationsByNameQuery,
+            container.resolve(SearchOrganizationsByNameQueryHandler),
+        )
+        mediator.register_query(
+            GetOrganizationsByRadiusQuery,
+            container.resolve(GetOrganizationsByRadiusQueryHandler),
+        )
+        mediator.register_query(
+            GetOrganizationsByRectangleQuery,
+            container.resolve(GetOrganizationsByRectangleQueryHandler),
+        )
+
+        return mediator
+
+    container.register(Mediator, factory=init_mediator)
+
+    return container

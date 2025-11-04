@@ -86,3 +86,21 @@ class ActivityNestingLevelExceededException(OrganizationException):
             f"Activity nesting level exceeded. Current level is {self.current_level}, "
             f"maximum allowed level is {self.max_level}"
         )
+
+
+@dataclass(eq=False)
+class ActivityNotFoundException(OrganizationException):
+    activity_id: str
+
+    @property
+    def message(self) -> str:
+        return f"Activity with id {self.activity_id} not found"
+
+
+@dataclass(eq=False)
+class BuildingNotFoundException(OrganizationException):
+    address: str
+
+    @property
+    def message(self) -> str:
+        return f"Building with address {self.address} not found"
