@@ -8,9 +8,9 @@ from application.queries.organization import (
     GetOrganizationByIdQuery,
     GetOrganizationsByActivityQuery,
     GetOrganizationsByAddressQuery,
+    GetOrganizationsByNameQuery,
     GetOrganizationsByRadiusQuery,
     GetOrganizationsByRectangleQuery,
-    SearchOrganizationsByNameQuery,
 )
 
 
@@ -102,7 +102,7 @@ async def test_search_organizations_by_name_query(mediator: Mediator):
 
     # Ищем по названию "Рога"
     results = await mediator.handle_query(
-        SearchOrganizationsByNameQuery(name="Рога", limit=10, offset=0),
+        GetOrganizationsByNameQuery(name="Рога", limit=10, offset=0),
     )
 
     results_list = list(results)
@@ -393,18 +393,18 @@ async def test_search_organizations_pagination(mediator: Mediator):
 
     # Тест пагинации: берем первые 2
     results_page1 = await mediator.handle_query(
-        SearchOrganizationsByNameQuery(name="Тест", limit=2, offset=0),
+        GetOrganizationsByNameQuery(name="Тест", limit=2, offset=0),
     )
     assert len(list(results_page1)) == 2
 
     # Берем следующие 2
     results_page2 = await mediator.handle_query(
-        SearchOrganizationsByNameQuery(name="Тест", limit=2, offset=2),
+        GetOrganizationsByNameQuery(name="Тест", limit=2, offset=2),
     )
     assert len(list(results_page2)) == 2
 
     # Берем последний
     results_page3 = await mediator.handle_query(
-        SearchOrganizationsByNameQuery(name="Тест", limit=2, offset=4),
+        GetOrganizationsByNameQuery(name="Тест", limit=2, offset=4),
     )
     assert len(list(results_page3)) == 1

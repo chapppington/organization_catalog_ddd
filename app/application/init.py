@@ -25,12 +25,12 @@ from application.queries.organization import (
     GetOrganizationsByActivityQueryHandler,
     GetOrganizationsByAddressQuery,
     GetOrganizationsByAddressQueryHandler,
+    GetOrganizationsByNameQuery,
+    GetOrganizationsByNameQueryHandler,
     GetOrganizationsByRadiusQuery,
     GetOrganizationsByRadiusQueryHandler,
     GetOrganizationsByRectangleQuery,
     GetOrganizationsByRectangleQueryHandler,
-    SearchOrganizationsByNameQuery,
-    SearchOrganizationsByNameQueryHandler,
 )
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
@@ -92,7 +92,7 @@ def _init_container() -> Container:
     container.register(GetOrganizationByIdQueryHandler)
     container.register(GetOrganizationsByAddressQueryHandler)
     container.register(GetOrganizationsByActivityQueryHandler)
-    container.register(SearchOrganizationsByNameQueryHandler)
+    container.register(GetOrganizationsByNameQueryHandler)
     container.register(GetOrganizationsByRadiusQueryHandler)
     container.register(GetOrganizationsByRectangleQueryHandler)
 
@@ -128,8 +128,8 @@ def _init_container() -> Container:
             container.resolve(GetOrganizationsByActivityQueryHandler),
         )
         mediator.register_query(
-            SearchOrganizationsByNameQuery,
-            container.resolve(SearchOrganizationsByNameQueryHandler),
+            GetOrganizationsByNameQuery,
+            container.resolve(GetOrganizationsByNameQueryHandler),
         )
         mediator.register_query(
             GetOrganizationsByRadiusQuery,

@@ -29,7 +29,7 @@ class GetOrganizationsByActivityQuery(BaseQuery):
 
 
 @dataclass(frozen=True)
-class SearchOrganizationsByNameQuery(BaseQuery):
+class GetOrganizationsByNameQuery(BaseQuery):
     name: str
     limit: int
     offset: int
@@ -104,14 +104,14 @@ class GetOrganizationsByActivityQueryHandler(
 
 
 @dataclass(frozen=True)
-class SearchOrganizationsByNameQueryHandler(
-    BaseQueryHandler[SearchOrganizationsByNameQuery, Iterable[OrganizationEntity]],
+class GetOrganizationsByNameQueryHandler(
+    BaseQueryHandler[GetOrganizationsByNameQuery, Iterable[OrganizationEntity]],
 ):
     organization_service: OrganizationService
 
     async def handle(
         self,
-        query: SearchOrganizationsByNameQuery,
+        query: GetOrganizationsByNameQuery,
     ) -> Iterable[OrganizationEntity]:
         return await self.organization_service.get_organizations_by_name(
             name=query.name,
