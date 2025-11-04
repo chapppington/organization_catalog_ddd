@@ -17,8 +17,8 @@ class DummyInMemoryBuildingRepository(BaseBuildingRepository):
     async def add(self, building: BuildingEntity) -> None:
         self._saved_buildings.append(building)
 
+    @staticmethod
     def _calculate_distance(
-        self,
         lat1: float,
         lon1: float,
         lat2: float,
