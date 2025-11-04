@@ -17,7 +17,6 @@ from application.commands.organization import (
     CreateOrganizationCommand,
     CreateOrganizationCommandHandler,
 )
-from application.common.interfaces.uow import UnitOfWork
 from application.mediator import Mediator
 from application.queries.organization import (
     GetOrganizationByIdQuery,
@@ -50,7 +49,6 @@ from infrastructure.database.main import (
 from infrastructure.database.repositories.activity import ActivityRepository
 from infrastructure.database.repositories.building import BuildingRepository
 from infrastructure.database.repositories.organization import OrganizationRepository
-from infrastructure.database.uow import SQLAlchemyUoW
 from settings.config import Config
 
 
@@ -69,23 +67,17 @@ def _init_container() -> Container:
     engine = build_sa_engine()
     session_factory = build_sa_session_factory(engine)
 
-    def init_uow() -> UnitOfWork:
+    def init_activity_repository() -> BaseActivityRepository:
         session = session_factory()
-        return SQLAlchemyUoW(session=session)
+        return ActivityRepository(session=session)
 
-    def init_activity_repository(uow: UnitOfWork) -> BaseActivityRepository:
-        return ActivityRepository(_uow=uow)
+    def init_building_repository() -> BaseBuildingRepository:
+        session = session_factory()
+        return BuildingRepository(session=session)
 
-    def init_building_repository(uow: UnitOfWork) -> BaseBuildingRepository:
-        return BuildingRepository(_uow=uow)
-
-    def init_organization_repository(uow: UnitOfWork) -> BaseOrganizationRepository:
-        return OrganizationRepository(_uow=uow)
-
-    container.register(
-        UnitOfWork,
-        factory=init_uow,
-    )
+    def init_organization_repository() -> BaseOrganizationRepository:
+        session = session_factory()
+        return OrganizationRepository(session=session)
 
     container.register(
         BaseOrganizationRepository,

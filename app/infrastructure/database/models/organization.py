@@ -1,6 +1,8 @@
 from sqlalchemy import (
     Column,
+    DateTime,
     ForeignKey,
+    func,
     String,
     Table,
     UUID,
@@ -33,6 +35,14 @@ ORGANIZATIONS_TABLE = Table(
         UUID(as_uuid=True),
         ForeignKey("buildings.id"),
         nullable=False,
+    ),
+    Column("created_at", DateTime, nullable=False, server_default=func.now()),
+    Column(
+        "updated_at",
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     ),
 )
 
@@ -70,7 +80,10 @@ mapper_registry.map_imperatively(
     OrganizationEntity,
     ORGANIZATIONS_TABLE,
     properties={
+        "oid": ORGANIZATIONS_TABLE.c.id,
         "name": composite(OrganizationNameValueObject, ORGANIZATIONS_TABLE.c.name),
+        "created_at": ORGANIZATIONS_TABLE.c.created_at,
+        "updated_at": ORGANIZATIONS_TABLE.c.updated_at,
         "building": relationship(
             BuildingEntity,
             foreign_keys=[ORGANIZATIONS_TABLE.c.building_id],

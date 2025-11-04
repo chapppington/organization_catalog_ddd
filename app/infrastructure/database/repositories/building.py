@@ -32,7 +32,9 @@ class BuildingRepository(BaseSQLAlchemyRepository, BaseBuildingRepository):
         self.session.add(building)
         try:
             await self.session.flush([building])
+            await self.session.commit()
         except IntegrityError as err:
+            await self.session.rollback()
             self._parse_error(err, building)
 
     async def get_by_id(self, building_id: str) -> BuildingEntity | None:
@@ -122,4 +124,4 @@ class BuildingRepository(BaseSQLAlchemyRepository, BaseBuildingRepository):
                 ) from err
             case _:
                 # Любая другая ошибка - пробрасываем дальше
-                raise RepoException(err) from err
+                raise RepoException() from err

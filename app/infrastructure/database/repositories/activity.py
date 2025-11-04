@@ -29,7 +29,9 @@ class ActivityRepository(BaseSQLAlchemyRepository, BaseActivityRepository):
         self.session.add(activity)
         try:
             await self.session.flush([activity])
+            await self.session.commit()
         except IntegrityError as err:
+            await self.session.rollback()
             self._parse_error(err, activity)
 
     async def get_by_id(self, activity_id: str) -> ActivityEntity | None:
@@ -81,8 +83,14 @@ class ActivityRepository(BaseSQLAlchemyRepository, BaseActivityRepository):
                 # Parent_id ссылается на несуществующую активность
                 parent_id = activity.parent.oid if activity.parent else "unknown"
                 raise ParentActivityNotFoundException(parent_id=parent_id) from err
-            case "uq_activities_name_parent" | "activities_name_parent_id_key":
+            case (
+                "uq_activities_name_parent"
+                | "uq_activities_name_root"
+                | "activities_name_parent_id_key"
+            ):
                 # Активность с таким именем уже существует в данной категории
+                # uq_activities_name_root - для корневых элементов (parent_id IS NULL)
+                # uq_activities_name_parent - для дочерних элементов (parent_id IS NOT NULL)
                 # PostgreSQL создает constraint с именем "activities_name_parent_id_key" для UniqueConstraint
                 parent_id = activity.parent.oid if activity.parent else None
                 raise ActivityWithThatNameAlreadyExistsException(
@@ -91,4 +99,4 @@ class ActivityRepository(BaseSQLAlchemyRepository, BaseActivityRepository):
                 ) from err
             case _:
                 # Любая другая ошибка - пробрасываем дальше
-                raise RepoException(err) from err
+                raise RepoException() from err

@@ -1,6 +1,8 @@
 from sqlalchemy import (
     Column,
+    DateTime,
     Float,
+    func,
     String,
     Table,
     UUID,
@@ -26,18 +28,29 @@ BUILDINGS_TABLE = Table(
     Column("address", String, nullable=False, unique=True),
     Column("latitude", Float, nullable=False),
     Column("longitude", Float, nullable=False),
+    Column("created_at", DateTime, nullable=False, server_default=func.now()),
+    Column(
+        "updated_at",
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    ),
 )
 
 mapper_registry.map_imperatively(
     BuildingEntity,
     BUILDINGS_TABLE,
     properties={
+        "oid": BUILDINGS_TABLE.c.id,
         "address": composite(BuildingAddressValueObject, BUILDINGS_TABLE.c.address),
         "coordinates": composite(
             BuildingCoordinatesValueObject,
             BUILDINGS_TABLE.c.latitude,
             BUILDINGS_TABLE.c.longitude,
         ),
+        "created_at": BUILDINGS_TABLE.c.created_at,
+        "updated_at": BUILDINGS_TABLE.c.updated_at,
     },
     column_prefix="_",
 )

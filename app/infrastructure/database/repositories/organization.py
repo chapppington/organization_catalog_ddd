@@ -61,7 +61,9 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
 
         try:
             await self.session.flush([organization])
+            await self.session.commit()
         except IntegrityError as err:
+            await self.session.rollback()
             self._parse_error(err, organization)
 
     async def get_by_id(self, organization_id: str) -> OrganizationEntity | None:
@@ -169,4 +171,4 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
                 ) from err
             case _:
                 # Любая другая ошибка - пробрасываем дальше
-                raise RepoException(err) from err
+                raise RepoException() from err

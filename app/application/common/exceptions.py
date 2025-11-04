@@ -3,19 +3,15 @@ from dataclasses import dataclass
 from domain.base.exceptions import ApplicationException
 
 
-class UnexpectedException(ApplicationException):
+class CommitException(ApplicationException):
     pass
 
 
-class CommitException(UnexpectedException):
+class RollbackException(ApplicationException):
     pass
 
 
-class RollbackException(UnexpectedException):
-    pass
-
-
-class RepoException(UnexpectedException):
+class RepoException(ApplicationException):
     pass
 
 

@@ -1,8 +1,11 @@
-from dataclasses import dataclass
-
 from fastapi import (
     APIRouter,
     status,
+)
+
+from presentation.api.schemas import (
+    ApiResponse,
+    PingResponseSchema,
 )
 
 
@@ -12,14 +15,8 @@ healthcheck_router = APIRouter(
 )
 
 
-@dataclass(frozen=True)
-class OkStatus:
-    status: str = "ok"
-
-
-OK_STATUS = OkStatus()
-
-
 @healthcheck_router.get("", status_code=status.HTTP_200_OK)
-async def get_status() -> OkStatus:
-    return OK_STATUS
+async def get_status() -> ApiResponse[PingResponseSchema]:
+    return ApiResponse[PingResponseSchema](
+        data=PingResponseSchema(result=True),
+    )

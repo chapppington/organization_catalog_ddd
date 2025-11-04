@@ -4,7 +4,6 @@ from application.commands.base import (
     BaseCommand,
     BaseCommandHandler,
 )
-from application.common.interfaces.uow import UnitOfWork
 from domain.organization.entities import BuildingEntity
 from domain.organization.services import BuildingService
 
@@ -21,7 +20,6 @@ class CreateBuildingCommandHandler(
     BaseCommandHandler[CreateBuildingCommand, BuildingEntity],
 ):
     building_service: BuildingService
-    uow: UnitOfWork
 
     async def handle(self, command: CreateBuildingCommand) -> BuildingEntity:
         result = await self.building_service.create_building(
@@ -29,5 +27,4 @@ class CreateBuildingCommandHandler(
             latitude=command.latitude,
             longitude=command.longitude,
         )
-        await self.uow.commit()
         return result

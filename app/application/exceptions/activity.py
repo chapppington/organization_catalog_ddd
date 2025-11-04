@@ -11,8 +11,8 @@ class ActivityWithThatNameAlreadyExistsException(LogicException):
     @property
     def message(self):
         if self.parent_id:
-            return f'Activity with name "{self.name}" already exists in this category.'
-        return f'Root activity with name "{self.name}" already exists.'
+            return f"Activity with name '{self.name}' already exists in this category."
+        return f"Root activity with name '{self.name}' already exists."
 
 
 @dataclass(eq=False)
