@@ -15,16 +15,6 @@ class ActivityService:
         name: str,
         parent_id: str | None = None,
     ) -> ActivityEntity:
-        """Создает новый вид деятельности.
-
-        Args:
-            name: Название деятельности
-            parent_id: ID родительской деятельности (опционально)
-
-        Raises:
-            ActivityNotFoundException: Если родительская деятельность не найдена
-
-        """
         parent = None
         if parent_id:
             parent = await self.activity_repository.get_by_id(parent_id)

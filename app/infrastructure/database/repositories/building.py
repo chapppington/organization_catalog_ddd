@@ -1,24 +1,12 @@
 import math
-from typing import (
-    Iterable,
-    NoReturn,
-)
+from typing import Iterable
 from uuid import UUID
 
 from sqlalchemy import (
     func,
     select,
 )
-from sqlalchemy.exc import (
-    DBAPIError,
-    IntegrityError,
-)
 
-from application.common.exceptions import RepoException
-from application.exceptions.building import (
-    BuildingIdAlreadyExistsException,
-    BuildingWithThatAddressAlreadyExistsException,
-)
 from domain.organization.entities import BuildingEntity
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
 from domain.organization.interfaces.repositories.filters import BuildingFilter
@@ -30,31 +18,23 @@ class BuildingRepository(BaseSQLAlchemyRepository, BaseBuildingRepository):
     async def add(self, building: BuildingEntity) -> None:
         """Добавляет новое здание в базу данных."""
         self.session.add(building)
-        try:
-            await self.session.flush([building])
-            await self.session.commit()
-        except IntegrityError as err:
-            await self.session.rollback()
-            self._parse_error(err, building)
+        await self.session.commit()
 
     async def get_by_id(self, building_id: str) -> BuildingEntity | None:
         """Получает здание по ID."""
-        try:
-            building_uuid = UUID(building_id)
-        except (ValueError, AttributeError):
-            return None
+        building_uuid = UUID(building_id)
 
-        stmt = select(BuildingEntity).where(BUILDINGS_TABLE.c.id == building_uuid)
-        result = await self.session.execute(stmt)
+        query = select(BuildingEntity).where(BUILDINGS_TABLE.c.id == building_uuid)
+        result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
     async def filter(self, filters: BuildingFilter) -> Iterable[BuildingEntity]:
         """Фильтрует здания по заданным критериям."""
-        stmt = select(BuildingEntity)
+        query = select(BuildingEntity)
 
         # Фильтр по адресу (частичное совпадение, case-insensitive)
         if filters.address:
-            stmt = stmt.where(BUILDINGS_TABLE.c.address.ilike(f"%{filters.address}%"))
+            query = query.where(BUILDINGS_TABLE.c.address.ilike(f"%{filters.address}%"))
 
         # Фильтр по координатам (точное совпадение)
         # Если указан radius, то latitude и longitude используются для центральной точки
@@ -82,46 +62,23 @@ class BuildingRepository(BaseSQLAlchemyRepository, BaseBuildingRepository):
             c = 2 * func.atan2(func.sqrt(a), func.sqrt(1 - a))
             distance = R * c
 
-            stmt = stmt.where(distance <= filters.radius)
+            query = query.where(distance <= filters.radius)
         else:
             # Если radius не указан, используем точное совпадение
             if filters.latitude is not None:
-                stmt = stmt.where(BUILDINGS_TABLE.c.latitude == filters.latitude)
+                query = query.where(BUILDINGS_TABLE.c.latitude == filters.latitude)
             if filters.longitude is not None:
-                stmt = stmt.where(BUILDINGS_TABLE.c.longitude == filters.longitude)
+                query = query.where(BUILDINGS_TABLE.c.longitude == filters.longitude)
 
         # Фильтр по прямоугольнику (bounding box)
         if filters.lat_min is not None:
-            stmt = stmt.where(BUILDINGS_TABLE.c.latitude >= filters.lat_min)
+            query = query.where(BUILDINGS_TABLE.c.latitude >= filters.lat_min)
         if filters.lat_max is not None:
-            stmt = stmt.where(BUILDINGS_TABLE.c.latitude <= filters.lat_max)
+            query = query.where(BUILDINGS_TABLE.c.latitude <= filters.lat_max)
         if filters.lon_min is not None:
-            stmt = stmt.where(BUILDINGS_TABLE.c.longitude >= filters.lon_min)
+            query = query.where(BUILDINGS_TABLE.c.longitude >= filters.lon_min)
         if filters.lon_max is not None:
-            stmt = stmt.where(BUILDINGS_TABLE.c.longitude <= filters.lon_max)
+            query = query.where(BUILDINGS_TABLE.c.longitude <= filters.lon_max)
 
-        result = await self.session.execute(stmt)
+        result = await self.session.execute(query)
         return result.scalars().all()
-
-    def _parse_error(self, err: DBAPIError, building: BuildingEntity) -> NoReturn:
-        constraint_name = getattr(
-            getattr(getattr(err, "__cause__", None), "__cause__", None),
-            "constraint_name",
-            None,
-        )
-
-        match constraint_name:
-            case "pk_buildings":
-                # Дублирование ID
-                raise BuildingIdAlreadyExistsException(
-                    building_id=building.oid,
-                ) from err
-            case "buildings_address_key" | "uq_buildings_address":
-                # Здание с таким адресом уже существует
-                # PostgreSQL создает constraint с именем "buildings_address_key" для unique=True
-                raise BuildingWithThatAddressAlreadyExistsException(
-                    address=building.address.as_generic_type(),
-                ) from err
-            case _:
-                # Любая другая ошибка - пробрасываем дальше
-                raise RepoException() from err

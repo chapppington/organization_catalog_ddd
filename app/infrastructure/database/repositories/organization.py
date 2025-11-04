@@ -1,6 +1,5 @@
 from typing import (
     Iterable,
-    NoReturn,
 )
 from uuid import (
     UUID,
@@ -12,16 +11,7 @@ from sqlalchemy import (
     exists,
     select,
 )
-from sqlalchemy.exc import (
-    DBAPIError,
-    IntegrityError,
-)
 
-from application.common.exceptions import RepoException
-from application.exceptions.organization import (
-    OrganizationIdAlreadyExistsException,
-    OrganizationWithThatNameAlreadyExistsException,
-)
 from domain.organization.entities import OrganizationEntity
 from domain.organization.interfaces.repositories.filters import OrganizationFilter
 from domain.organization.interfaces.repositories.organization import (
@@ -59,50 +49,43 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
 
         self.session.add(organization)
 
-        try:
-            # Сначала сохраняем организацию, чтобы получить ID
-            await self.session.flush([organization])
+        # Сначала сохраняем организацию, чтобы получить ID
+        await self.session.flush([organization])
 
-            # Теперь можно добавлять телефоны и связи, т.к. организация уже в БД
-            # Сохраняем телефоны отдельно
-            if organization.phones:
-                for phone in organization.phones:
-                    await self.session.execute(
-                        ORGANIZATION_PHONES_TABLE.insert().values(
-                            id=uuid4(),
-                            organization_id=UUID(str(organization.oid)),
-                            phone=phone.as_generic_type(),
-                        ),
-                    )
+        # Теперь можно добавлять телефоны и связи, т.к. организация уже в БД
+        # Сохраняем телефоны отдельно
+        if organization.phones:
+            for phone in organization.phones:
+                await self.session.execute(
+                    ORGANIZATION_PHONES_TABLE.insert().values(
+                        id=uuid4(),
+                        organization_id=UUID(str(organization.oid)),
+                        phone=phone.as_generic_type(),
+                    ),
+                )
 
-            # Сохраняем связи с видами деятельности (только INSERT, без создания activities)
-            if activity_ids:
-                for activity_id in activity_ids:
-                    await self.session.execute(
-                        ORGANIZATION_ACTIVITIES_TABLE.insert().values(
-                            organization_id=UUID(str(organization.oid)),
-                            activity_id=UUID(activity_id),
-                        ),
-                    )
+        # Сохраняем связи с видами деятельности (только INSERT, без создания activities)
+        if activity_ids:
+            for activity_id in activity_ids:
+                await self.session.execute(
+                    ORGANIZATION_ACTIVITIES_TABLE.insert().values(
+                        organization_id=UUID(str(organization.oid)),
+                        activity_id=UUID(activity_id),
+                    ),
+                )
 
-            await self.session.commit()
+        await self.session.commit()
 
-            # Восстанавливаем activities в объекте для возврата ПОСЛЕ commit,
-            # чтобы SQLAlchemy не пытался синхронизировать связи
-            organization.activities = original_activities
-        except IntegrityError as err:
-            await self.session.rollback()
-            self._parse_error(err, organization)
+        # Восстанавливаем activities в объекте для возврата ПОСЛЕ commit,
+        # чтобы SQLAlchemy не пытался синхронизировать связи
+        organization.activities = original_activities
 
     async def get_by_id(self, organization_id: str) -> OrganizationEntity | None:
         """Получает организацию по ID."""
-        try:
-            org_uuid = UUID(organization_id)
-        except (ValueError, AttributeError):
-            return None
+        org_uuid = UUID(organization_id)
 
-        stmt = select(OrganizationEntity).where(ORGANIZATIONS_TABLE.c.id == org_uuid)
-        result = await self.session.execute(stmt)
+        query = select(OrganizationEntity).where(ORGANIZATIONS_TABLE.c.id == org_uuid)
+        result = await self.session.execute(query)
         organization = result.unique().scalar_one_or_none()
 
         if organization:
@@ -116,11 +99,11 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
         filters: OrganizationFilter,
     ) -> Iterable[OrganizationEntity]:
         """Фильтрует организации по заданным критериям."""
-        stmt = select(OrganizationEntity)
+        query = select(OrganizationEntity)
 
         # Фильтр по имени (частичное совпадение, case-insensitive)
         if filters.name:
-            stmt = stmt.where(ORGANIZATIONS_TABLE.c.name.ilike(f"%{filters.name}%"))
+            query = query.where(ORGANIZATIONS_TABLE.c.name.ilike(f"%{filters.name}%"))
 
         # Фильтр по адресу здания
         if filters.address:
@@ -134,14 +117,14 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
                     ),
                 ),
             )
-            stmt = stmt.where(building_exists)
+            query = query.where(building_exists)
 
         # Фильтр по виду деятельности (через связь many-to-many)
         if filters.activity_name:
             from infrastructure.database.models.activity import ACTIVITIES_TABLE
 
-            stmt = (
-                stmt.join(
+            query = (
+                query.join(
                     ORGANIZATION_ACTIVITIES_TABLE,
                     ORGANIZATIONS_TABLE.c.id
                     == ORGANIZATION_ACTIVITIES_TABLE.c.organization_id,
@@ -156,11 +139,11 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
 
         # Применяем limit и offset
         if filters.limit:
-            stmt = stmt.limit(filters.limit)
+            query = query.limit(filters.limit)
         if filters.offset:
-            stmt = stmt.offset(filters.offset)
+            query = query.offset(filters.offset)
 
-        result = await self.session.execute(stmt)
+        result = await self.session.execute(query)
         organizations = result.scalars().unique().all()
 
         # Загружаем телефоны для всех организаций
@@ -171,39 +154,11 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
 
     async def _load_phones(self, organization: OrganizationEntity) -> None:
         """Загружает телефоны для организации."""
-        stmt = select(ORGANIZATION_PHONES_TABLE.c.phone).where(
+        query = select(ORGANIZATION_PHONES_TABLE.c.phone).where(
             ORGANIZATION_PHONES_TABLE.c.organization_id == UUID(str(organization.oid)),
         )
-        result = await self.session.execute(stmt)
+        result = await self.session.execute(query)
         phones = [row[0] for row in result]
         organization.phones = [
             OrganizationPhoneValueObject(value=phone) for phone in phones
         ]
-
-    def _parse_error(
-        self,
-        err: DBAPIError,
-        organization: OrganizationEntity,
-    ) -> NoReturn:
-        """Парсит ошибки БД и выбрасывает соответствующие доменные
-        исключения."""
-        constraint_name = getattr(
-            getattr(getattr(err, "__cause__", None), "__cause__", None),
-            "constraint_name",
-            None,
-        )
-
-        match constraint_name:
-            case "pk_organizations":
-                # Дублирование ID
-                raise OrganizationIdAlreadyExistsException(
-                    organization_id=organization.oid,
-                ) from err
-            case "organizations_name_key" | "uq_organizations_name":
-                # Организация с таким именем уже существует
-                raise OrganizationWithThatNameAlreadyExistsException(
-                    name=organization.name.as_generic_type(),
-                ) from err
-            case _:
-                # Любая другая ошибка - пробрасываем дальше
-                raise RepoException() from err
