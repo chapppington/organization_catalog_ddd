@@ -131,8 +131,19 @@ async def get_organizations_by_address(
         offset=pagination.offset,
     )
     organizations = await mediator.handle_query(query)
+    organizations_list = list(organizations)
 
-    items = [OrganizationResponseSchema.from_entity(org) for org in organizations]
+    if not organizations_list:
+        return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
+            data=ListPaginatedResponse[OrganizationResponseSchema](
+                items=[],
+                pagination=PaginationOut(
+                    limit=pagination.limit,
+                    offset=pagination.offset,
+                ),
+            ),
+        )
+    items = [OrganizationResponseSchema.from_entity(org) for org in organizations_list]
 
     return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
         data=ListPaginatedResponse[OrganizationResponseSchema](

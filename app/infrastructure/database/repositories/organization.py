@@ -7,7 +7,11 @@ from uuid import (
     uuid4,
 )
 
-from sqlalchemy import select
+from sqlalchemy import (
+    and_,
+    exists,
+    select,
+)
 from sqlalchemy.exc import (
     DBAPIError,
     IntegrityError,
@@ -99,7 +103,7 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
 
         stmt = select(OrganizationEntity).where(ORGANIZATIONS_TABLE.c.id == org_uuid)
         result = await self.session.execute(stmt)
-        organization = result.scalar_one_or_none()
+        organization = result.unique().scalar_one_or_none()
 
         if organization:
             # Загружаем телефоны отдельно
@@ -120,10 +124,17 @@ class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepositor
 
         # Фильтр по адресу здания
         if filters.address:
-            stmt = stmt.join(
-                BUILDINGS_TABLE,
-                ORGANIZATIONS_TABLE.c.building_id == BUILDINGS_TABLE.c.id,
-            ).where(BUILDINGS_TABLE.c.address.ilike(f"%{filters.address}%"))
+            # Используем EXISTS для фильтрации по адресу, чтобы избежать конфликта с автоматическим JOIN
+            # из lazy="joined" для relationship building
+            building_exists = exists(
+                select(1).where(
+                    and_(
+                        BUILDINGS_TABLE.c.id == ORGANIZATIONS_TABLE.c.building_id,
+                        BUILDINGS_TABLE.c.address.ilike(f"%{filters.address}%"),
+                    ),
+                ),
+            )
+            stmt = stmt.where(building_exists)
 
         # Фильтр по виду деятельности (через связь many-to-many)
         if filters.activity_name:

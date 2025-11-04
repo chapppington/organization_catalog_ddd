@@ -66,7 +66,6 @@ def _init_container() -> Container:
 
     engine = build_sa_engine()
     session_factory = build_sa_session_factory(engine)
-
     session = session_factory()
 
     def init_activity_repository() -> BaseActivityRepository:
