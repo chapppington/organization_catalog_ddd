@@ -1,6 +1,6 @@
 import pytest
 
-from application.commands.organization import CreateBuildingCommand
+from application.commands.building import CreateBuildingCommand
 from application.mediator import Mediator
 from domain.organization.exceptions import (
     EmptyBuildingAddressException,

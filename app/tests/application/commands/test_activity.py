@@ -1,6 +1,6 @@
 import pytest
 
-from application.commands.organization import CreateActivityCommand
+from application.commands.activity import CreateActivityCommand
 from application.mediator import Mediator
 from domain.organization.exceptions import (
     ActivityNestingLevelExceededException,

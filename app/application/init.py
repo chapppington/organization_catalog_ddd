@@ -5,11 +5,15 @@ from punq import (
     Scope,
 )
 
-from application.commands.organization import (
+from application.commands.activity import (
     CreateActivityCommand,
     CreateActivityCommandHandler,
+)
+from application.commands.building import (
     CreateBuildingCommand,
     CreateBuildingCommandHandler,
+)
+from application.commands.organization import (
     CreateOrganizationCommand,
     CreateOrganizationCommandHandler,
 )
