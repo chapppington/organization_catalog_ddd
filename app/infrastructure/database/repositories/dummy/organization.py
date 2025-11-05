@@ -2,10 +2,12 @@ from dataclasses import (
     dataclass,
     field,
 )
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
 
 from domain.organization.entities import OrganizationEntity
-from domain.organization.interfaces.repositories.filters import OrganizationFilter
 from domain.organization.interfaces.repositories.organization import (
     BaseOrganizationRepository,
 )
@@ -29,27 +31,31 @@ class DummyInMemoryOrganizationRepository(BaseOrganizationRepository):
         except StopIteration:
             return None
 
-    async def filter(self, filters: OrganizationFilter) -> Iterable[OrganizationEntity]:
+    async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]:
         results = self._saved_organizations.copy()
 
-        if filters.name:
-            search_term = filters.name.lower()
+        if "name" in filters and filters["name"]:
+            search_term = filters["name"].lower()
             results = [
                 org
                 for org in results
                 if search_term in org.name.as_generic_type().lower()
             ]
 
-        if filters.address:
-            search_term = filters.address.lower()
+        if "address" in filters and filters["address"]:
+            search_term = filters["address"].lower()
             results = [
                 org
                 for org in results
-                if search_term in org.building.address.as_generic_type().lower()
+                if org.building.address.as_generic_type().lower() == search_term
             ]
 
-        if filters.activity_name:
-            search_term = filters.activity_name.lower()
+        if "building_id" in filters and filters["building_id"]:
+            building_id = filters["building_id"]
+            results = [org for org in results if org.building.oid == building_id]
+
+        if "activity_name" in filters and filters["activity_name"]:
+            search_term = filters["activity_name"].lower()
             results = [
                 org
                 for org in results
@@ -60,3 +66,7 @@ class DummyInMemoryOrganizationRepository(BaseOrganizationRepository):
             ]
 
         return results
+
+    async def count(self, **filters: Any) -> int:
+        results = list(await self.filter(**filters))
+        return len(results)

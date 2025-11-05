@@ -160,16 +160,31 @@ async def test_get_organizations_by_address_query(mediator: Mediator):
         ),
     )
 
-    # Ищем по адресу "Ленина"
+    # Ищем по полному адресу
     results = await mediator.handle_query(
-        GetOrganizationsByAddressQuery(address="Ленина", limit=10, offset=0),
+        GetOrganizationsByAddressQuery(
+            address="г. Москва, ул. Ленина 1",
+            limit=10,
+            offset=0,
+        ),
     )
 
     results_list = list(results)
+    print(f"\nНайдено организаций: {len(results_list)}")
+    for idx, org in enumerate(results_list, 1):
+        print(f"\n{idx}. {org.name.as_generic_type()}")
+        print(f"   ID: {org.oid}")
+        print(f"   Адрес: {org.building.address.as_generic_type()}")
+        print(f"   Телефоны: {[p.as_generic_type() for p in org.phones]}")
+        print(f"   Деятельности: {[a.name.as_generic_type() for a in org.activities]}")
+    print()
     assert len(results_list) == 2
     names = [org.name.as_generic_type() for org in results_list]
     assert "ООО Ленина 1" in names
     assert "ООО Ленина 2" in names
+
+    # Проверяем, что организация из другого здания не попала в результаты
+    assert "ООО Пушкина" not in names
 
 
 @pytest.mark.asyncio

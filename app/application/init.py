@@ -42,13 +42,11 @@ from domain.organization.services import (
     BuildingService,
     OrganizationService,
 )
-from infrastructure.database.main import (
-    build_sa_engine,
-    build_sa_session_factory,
+from infrastructure.database.repositories.activity import SQLAlchemyActivityRepository
+from infrastructure.database.repositories.building import SQLAlchemyBuildingRepository
+from infrastructure.database.repositories.organization import (
+    SQLAlchemyOrganizationRepository,
 )
-from infrastructure.database.repositories.activity import ActivityRepository
-from infrastructure.database.repositories.building import BuildingRepository
-from infrastructure.database.repositories.organization import OrganizationRepository
 from settings.config import Config
 
 
@@ -61,35 +59,23 @@ def _init_container() -> Container:
     container = Container()
 
     # Регистрируем конфиг
-    config = Config()
-    container.register(Config, instance=config, scope=Scope.singleton)
+    container.register(Config, instance=Config(), scope=Scope.singleton)
 
-    engine = build_sa_engine()
-    session_factory = build_sa_session_factory(engine)
-    session = session_factory()
-
-    def init_activity_repository() -> BaseActivityRepository:
-        return ActivityRepository(session=session)
-
-    def init_building_repository() -> BaseBuildingRepository:
-        return BuildingRepository(session=session)
-
-    def init_organization_repository() -> BaseOrganizationRepository:
-        return OrganizationRepository(session=session)
-
-    container.register(
-        BaseOrganizationRepository,
-        factory=init_organization_repository,
-    )
-
+    # Регистрируем репозитории
     container.register(
         BaseBuildingRepository,
-        factory=init_building_repository,
+        instance=SQLAlchemyBuildingRepository(),
+        scope=Scope.singleton,
     )
-
     container.register(
         BaseActivityRepository,
-        factory=init_activity_repository,
+        instance=SQLAlchemyActivityRepository(),
+        scope=Scope.singleton,
+    )
+    container.register(
+        BaseOrganizationRepository,
+        instance=SQLAlchemyOrganizationRepository(),
+        scope=Scope.singleton,
     )
 
     # Регистрируем доменные сервисы

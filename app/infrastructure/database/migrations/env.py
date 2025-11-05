@@ -9,10 +9,14 @@ from alembic import context
 from settings import config as app_config
 from infrastructure.database.models.base import BaseModel
 
-# Import all models to ensure they are registered with metadata
-from infrastructure.database.models import activity  # noqa: F401
-from infrastructure.database.models import building  # noqa: F401
-from infrastructure.database.models import organization  # noqa: F401
+
+from infrastructure.database.models import ActivityModel  # noqa: F401
+from infrastructure.database.models import BuildingModel  # noqa: F401
+from infrastructure.database.models import OrganizationPhoneModel  # noqa: F401
+
+from infrastructure.database.models import OrganizationModel  # noqa: F401
+
+from infrastructure.database.models import organization_activity  # noqa: F401
 
 
 config = context.config

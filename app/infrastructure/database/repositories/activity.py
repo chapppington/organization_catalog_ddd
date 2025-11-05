@@ -1,41 +1,73 @@
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import (
+    func,
+    select,
+)
 
 from domain.organization.entities import ActivityEntity
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
-from domain.organization.interfaces.repositories.filters import ActivityFilter
-from infrastructure.database.models.activity import ACTIVITIES_TABLE
-from infrastructure.database.repositories.base import BaseSQLAlchemyRepository
+from infrastructure.database.converters.activity import (
+    activity_entity_to_model,
+    activity_model_to_entity,
+)
+from infrastructure.database.main import async_session_factory
+from infrastructure.database.models.activity import ActivityModel
 
 
-class ActivityRepository(BaseSQLAlchemyRepository, BaseActivityRepository):
+class SQLAlchemyActivityRepository(BaseActivityRepository):
     async def add(self, activity: ActivityEntity) -> None:
-        """Добавляет новую активность в базу данных."""
-        self.session.add(activity)
-        await self.session.commit()
+        """Добавить активность."""
+        async with async_session_factory() as session:
+            model = activity_entity_to_model(activity)
+            session.add(model)
+            await session.commit()
 
-    async def get_by_id(self, activity_id: str) -> ActivityEntity | None:
-        """Получает активность по ID с автоматической загрузкой parent."""
-        activity_uuid = UUID(activity_id)
+    async def get_by_id(self, activity_id: UUID) -> ActivityEntity | None:
+        """Получить активность по ID."""
 
-        query = select(ActivityEntity).where(ACTIVITIES_TABLE.c.id == activity_uuid)
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
+        async with async_session_factory() as session:
+            stmt = select(ActivityModel).where(ActivityModel.oid == activity_id)
+            res = await session.execute(stmt)
+            result = res.scalar_one_or_none()
 
-    async def filter(self, filters: ActivityFilter) -> Iterable[ActivityEntity]:
-        """Фильтрует активности по заданным критериям."""
-        query = select(ActivityEntity)
+            return activity_model_to_entity(result) if result else None
 
-        # Фильтр по имени (частичное совпадение, case-insensitive)
-        if filters.name:
-            query = query.where(ACTIVITIES_TABLE.c.name.ilike(f"%{filters.name}%"))
+    async def get_by_name(self, name: str) -> ActivityEntity | None:
+        """Получить активность по имени."""
+        async with async_session_factory() as session:
+            stmt = select(ActivityModel).where(ActivityModel.name == name)
+            res = await session.execute(stmt)
+            result = res.scalar_one_or_none()
 
-        # Фильтр по parent_id
-        if filters.parent_id:
-            parent_uuid = UUID(filters.parent_id)
-            query = query.where(ACTIVITIES_TABLE.c.parent_id == parent_uuid)
+            return activity_model_to_entity(result) if result else None
 
-        result = await self.session.execute(query)
-        return result.scalars().all()
+    async def filter(self, **filters: Any) -> Iterable[ActivityEntity]:
+        """Фильтрация активностей."""
+        async with async_session_factory() as session:
+            stmt = select(ActivityModel)
+
+            for field, value in filters.items():
+                field_obj = getattr(ActivityModel, field)
+                stmt = stmt.where(field_obj == value)
+
+            res = await session.execute(stmt)
+            results = [activity_model_to_entity(row[0]) for row in res.all()]
+
+            return results
+
+    async def count(self, **filters: Any) -> int:
+        """Подсчет активностей."""
+        async with async_session_factory() as session:
+            stmt = select(func.count(ActivityModel.oid))
+
+            for field, value in filters.items():
+                field_obj = getattr(ActivityModel, field)
+                stmt = stmt.where(field_obj == value)
+
+            res = await session.execute(stmt)
+            return res.scalar_one()

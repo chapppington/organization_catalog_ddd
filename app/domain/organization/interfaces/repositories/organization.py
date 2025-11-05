@@ -3,10 +3,13 @@ from abc import (
     abstractmethod,
 )
 from dataclasses import dataclass
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
+from uuid import UUID
 
 from domain.organization.entities import OrganizationEntity
-from domain.organization.interfaces.repositories.filters import OrganizationFilter
 
 
 @dataclass
@@ -15,10 +18,10 @@ class BaseOrganizationRepository(ABC):
     async def add(self, organization: OrganizationEntity) -> None: ...
 
     @abstractmethod
-    async def get_by_id(self, organization_id: str) -> OrganizationEntity | None: ...
+    async def get_by_id(self, organization_id: UUID) -> OrganizationEntity | None: ...
 
     @abstractmethod
-    async def filter(
-        self,
-        filters: OrganizationFilter,
-    ) -> Iterable[OrganizationEntity]: ...
+    async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]: ...
+
+    @abstractmethod
+    async def count(self, **filters: Any) -> int: ...

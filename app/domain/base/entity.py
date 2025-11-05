@@ -4,12 +4,15 @@ from dataclasses import (
     field,
 )
 from datetime import datetime
-from uuid import uuid4
+from uuid import (
+    UUID,
+    uuid4,
+)
 
 
 @dataclass
 class BaseEntity(ABC):
-    oid: str = field(default_factory=lambda: str(uuid4()), kw_only=True)
+    oid: UUID = field(default_factory=uuid4, kw_only=True)
     created_at: datetime = field(default_factory=datetime.now, kw_only=True)
     updated_at: datetime = field(default_factory=datetime.now, kw_only=True)
 

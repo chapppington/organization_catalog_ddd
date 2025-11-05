@@ -3,10 +3,13 @@ from abc import (
     abstractmethod,
 )
 from dataclasses import dataclass
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
+from uuid import UUID
 
 from domain.organization.entities import BuildingEntity
-from domain.organization.interfaces.repositories.filters import BuildingFilter
 
 
 @dataclass
@@ -15,7 +18,13 @@ class BaseBuildingRepository(ABC):
     async def add(self, building: BuildingEntity) -> None: ...
 
     @abstractmethod
-    async def get_by_id(self, building_id: str) -> BuildingEntity | None: ...
+    async def get_by_id(self, building_id: UUID) -> BuildingEntity | None: ...
 
     @abstractmethod
-    async def filter(self, filters: BuildingFilter) -> Iterable[BuildingEntity]: ...
+    async def get_by_address(self, address: str) -> BuildingEntity | None: ...
+
+    @abstractmethod
+    async def filter(self, **filters: Any) -> Iterable[BuildingEntity]: ...
+
+    @abstractmethod
+    async def count(self, **filters: Any) -> int: ...

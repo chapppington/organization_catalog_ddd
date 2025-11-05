@@ -1,5 +1,7 @@
-import math
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
 from uuid import UUID
 
 from sqlalchemy import (
@@ -9,76 +11,62 @@ from sqlalchemy import (
 
 from domain.organization.entities import BuildingEntity
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
-from domain.organization.interfaces.repositories.filters import BuildingFilter
-from infrastructure.database.models.building import BUILDINGS_TABLE
-from infrastructure.database.repositories.base import BaseSQLAlchemyRepository
+from infrastructure.database.converters.building import (
+    building_entity_to_model,
+    building_model_to_entity,
+)
+from infrastructure.database.main import async_session_factory
+from infrastructure.database.models.building import BuildingModel
 
 
-class BuildingRepository(BaseSQLAlchemyRepository, BaseBuildingRepository):
+class SQLAlchemyBuildingRepository(BaseBuildingRepository):
     async def add(self, building: BuildingEntity) -> None:
-        """Добавляет новое здание в базу данных."""
-        self.session.add(building)
-        await self.session.commit()
+        """Добавить здание."""
+        async with async_session_factory() as session:
+            model = building_entity_to_model(building)
+            session.add(model)
+            await session.commit()
 
-    async def get_by_id(self, building_id: str) -> BuildingEntity | None:
-        """Получает здание по ID."""
-        building_uuid = UUID(building_id)
+    async def get_by_id(self, building_id: UUID) -> BuildingEntity | None:
+        """Получить здание по ID."""
+        async with async_session_factory() as session:
+            stmt = select(BuildingModel).where(BuildingModel.oid == building_id)
+            res = await session.execute(stmt)
+            result = res.scalar_one_or_none()
 
-        query = select(BuildingEntity).where(BUILDINGS_TABLE.c.id == building_uuid)
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
+            return building_model_to_entity(result) if result else None
 
-    async def filter(self, filters: BuildingFilter) -> Iterable[BuildingEntity]:
-        """Фильтрует здания по заданным критериям."""
-        query = select(BuildingEntity)
+    async def get_by_address(self, address: str) -> BuildingEntity | None:
+        """Получить здание по адресу."""
+        async with async_session_factory() as session:
+            stmt = select(BuildingModel).where(BuildingModel.address == address)
+            res = await session.execute(stmt)
+            result = res.scalar_one_or_none()
 
-        # Фильтр по адресу (частичное совпадение, case-insensitive)
-        if filters.address:
-            query = query.where(BUILDINGS_TABLE.c.address.ilike(f"%{filters.address}%"))
+            return building_model_to_entity(result) if result else None
 
-        # Фильтр по координатам (точное совпадение)
-        # Если указан radius, то latitude и longitude используются для центральной точки
-        if filters.radius is not None:
-            if filters.latitude is None or filters.longitude is None:
-                # Радиус требует центральную точку
-                return []
+    async def filter(self, **filters: Any) -> Iterable[BuildingEntity]:
+        """Фильтрация зданий."""
+        async with async_session_factory() as session:
+            stmt = select(BuildingModel)
 
-            # Реализация поиска по радиусу используя формулу Haversine в SQL
-            R = 6371000  # Радиус Земли в метрах
+            for field, value in filters.items():
+                field_obj = getattr(BuildingModel, field)
+                stmt = stmt.where(field_obj == value)
 
-            # Переводим градусы в радианы для центральной точки
-            lat1_rad = math.radians(filters.latitude)
+            res = await session.execute(stmt)
+            results = [building_model_to_entity(row[0]) for row in res.all()]
 
-            # Вычисляем расстояние в SQL используя формулу Haversine
-            lat_col = BUILDINGS_TABLE.c.latitude
-            lon_col = BUILDINGS_TABLE.c.longitude
+            return results
 
-            delta_lat = func.radians(lat_col - filters.latitude)
-            delta_lon = func.radians(lon_col - filters.longitude)
+    async def count(self, **filters: Any) -> int:
+        """Подсчет зданий."""
+        async with async_session_factory() as session:
+            stmt = select(func.count(BuildingModel.oid))
 
-            a = func.power(func.sin(delta_lat / 2), 2) + func.cos(lat1_rad) * func.cos(
-                func.radians(lat_col),
-            ) * func.power(func.sin(delta_lon / 2), 2)
-            c = 2 * func.atan2(func.sqrt(a), func.sqrt(1 - a))
-            distance = R * c
+            for field, value in filters.items():
+                field_obj = getattr(BuildingModel, field)
+                stmt = stmt.where(field_obj == value)
 
-            query = query.where(distance <= filters.radius)
-        else:
-            # Если radius не указан, используем точное совпадение
-            if filters.latitude is not None:
-                query = query.where(BUILDINGS_TABLE.c.latitude == filters.latitude)
-            if filters.longitude is not None:
-                query = query.where(BUILDINGS_TABLE.c.longitude == filters.longitude)
-
-        # Фильтр по прямоугольнику (bounding box)
-        if filters.lat_min is not None:
-            query = query.where(BUILDINGS_TABLE.c.latitude >= filters.lat_min)
-        if filters.lat_max is not None:
-            query = query.where(BUILDINGS_TABLE.c.latitude <= filters.lat_max)
-        if filters.lon_min is not None:
-            query = query.where(BUILDINGS_TABLE.c.longitude >= filters.lon_min)
-        if filters.lon_max is not None:
-            query = query.where(BUILDINGS_TABLE.c.longitude <= filters.lon_max)
-
-        result = await self.session.execute(query)
-        return result.scalars().all()
+            res = await session.execute(stmt)
+            return res.scalar_one()

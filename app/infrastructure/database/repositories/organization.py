@@ -1,164 +1,129 @@
 from typing import (
+    Any,
     Iterable,
 )
-from uuid import (
-    UUID,
-    uuid4,
-)
+from uuid import UUID
 
 from sqlalchemy import (
-    and_,
-    exists,
+    func,
+    insert,
     select,
 )
+from sqlalchemy.orm import selectinload
 
 from domain.organization.entities import OrganizationEntity
-from domain.organization.interfaces.repositories.filters import OrganizationFilter
 from domain.organization.interfaces.repositories.organization import (
     BaseOrganizationRepository,
 )
-from domain.organization.value_objects import OrganizationPhoneValueObject
-from infrastructure.database.models.building import BUILDINGS_TABLE
-from infrastructure.database.models.organization import (
-    ORGANIZATION_ACTIVITIES_TABLE,
-    ORGANIZATION_PHONES_TABLE,
-    ORGANIZATIONS_TABLE,
+from infrastructure.database.converters.organization import (
+    organization_activities_ids,
+    organization_entity_to_model,
+    organization_model_to_entity,
+    organization_phones_to_models,
 )
-from infrastructure.database.repositories.base import BaseSQLAlchemyRepository
+from infrastructure.database.main import async_session_factory
+from infrastructure.database.models.activity import ActivityModel
+from infrastructure.database.models.organization import (
+    organization_activity,
+    OrganizationModel,
+)
 
 
-class OrganizationRepository(BaseSQLAlchemyRepository, BaseOrganizationRepository):
+class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
     async def add(self, organization: OrganizationEntity) -> None:
-        """Добавляет новую организацию в базу данных."""
-        # Сохраняем ID activities отдельно, т.к. они уже существуют в БД
-        # и не должны обрабатываться SQLAlchemy при добавлении организации
-        activity_ids = (
-            [str(activity.oid) for activity in organization.activities]
-            if organization.activities
-            else []
-        )
+        """Добавить организацию с телефонами и активностями."""
+        async with async_session_factory() as session:
+            org_model = organization_entity_to_model(organization)
+            session.add(org_model)
+            await session.flush()  # привязывает org_model к сессии
 
-        # Отсоединяем building от его сессии и присоединяем к текущей
-        if organization.building:
-            organization.building = await self.session.merge(organization.building)
+            # Телефоны
+            phones_models = organization_phones_to_models(org_model.oid, organization)
+            session.add_all(phones_models)
 
-        # Убираем activities из organization перед добавлением,
-        # чтобы SQLAlchemy не пытался управлять связями many-to-many
-        original_activities = organization.activities
-        organization.activities = []  # Очищаем список activities
+            # Активности
+            if organization.activities:
+                activities_ids = organization_activities_ids(organization)
+                # Добавляем связи напрямую через association table, чтобы избежать lazy loading
+                values = [
+                    {"organization_id": org_model.oid, "activity_id": activity_id}
+                    for activity_id in activities_ids
+                ]
+                await session.execute(insert(organization_activity).values(values))
 
-        self.session.add(organization)
+            await session.commit()
 
-        # Сначала сохраняем организацию, чтобы получить ID
-        await self.session.flush([organization])
-
-        # Теперь можно добавлять телефоны и связи, т.к. организация уже в БД
-        # Сохраняем телефоны отдельно
-        if organization.phones:
-            for phone in organization.phones:
-                await self.session.execute(
-                    ORGANIZATION_PHONES_TABLE.insert().values(
-                        id=uuid4(),
-                        organization_id=UUID(str(organization.oid)),
-                        phone=phone.as_generic_type(),
-                    ),
+    async def get_by_id(self, organization_id: UUID) -> OrganizationEntity | None:
+        """Получить организацию по ID с явной подгрузкой всех зависимостей."""
+        async with async_session_factory() as session:
+            stmt = (
+                select(OrganizationModel)
+                .where(OrganizationModel.oid == organization_id)
+                .options(
+                    selectinload(OrganizationModel.building),
+                    selectinload(OrganizationModel.phones),
+                    selectinload(OrganizationModel.activities),
                 )
-
-        # Сохраняем связи с видами деятельности (только INSERT, без создания activities)
-        if activity_ids:
-            for activity_id in activity_ids:
-                await self.session.execute(
-                    ORGANIZATION_ACTIVITIES_TABLE.insert().values(
-                        organization_id=UUID(str(organization.oid)),
-                        activity_id=UUID(activity_id),
-                    ),
-                )
-
-        await self.session.commit()
-
-        # Восстанавливаем activities в объекте для возврата ПОСЛЕ commit,
-        # чтобы SQLAlchemy не пытался синхронизировать связи
-        organization.activities = original_activities
-
-    async def get_by_id(self, organization_id: str) -> OrganizationEntity | None:
-        """Получает организацию по ID."""
-        org_uuid = UUID(organization_id)
-
-        query = select(OrganizationEntity).where(ORGANIZATIONS_TABLE.c.id == org_uuid)
-        result = await self.session.execute(query)
-        organization = result.unique().scalar_one_or_none()
-
-        if organization:
-            # Загружаем телефоны отдельно
-            await self._load_phones(organization)
-
-        return organization
-
-    async def filter(
-        self,
-        filters: OrganizationFilter,
-    ) -> Iterable[OrganizationEntity]:
-        """Фильтрует организации по заданным критериям."""
-        query = select(OrganizationEntity)
-
-        # Фильтр по имени (частичное совпадение, case-insensitive)
-        if filters.name:
-            query = query.where(ORGANIZATIONS_TABLE.c.name.ilike(f"%{filters.name}%"))
-
-        # Фильтр по адресу здания
-        if filters.address:
-            # Используем EXISTS для фильтрации по адресу, чтобы избежать конфликта с автоматическим JOIN
-            # из lazy="joined" для relationship building
-            building_exists = exists(
-                select(1).where(
-                    and_(
-                        BUILDINGS_TABLE.c.id == ORGANIZATIONS_TABLE.c.building_id,
-                        BUILDINGS_TABLE.c.address.ilike(f"%{filters.address}%"),
-                    ),
-                ),
             )
-            query = query.where(building_exists)
+            res = await session.execute(stmt)
+            result = res.scalar_one_or_none()
+            return organization_model_to_entity(result) if result else None
 
-        # Фильтр по виду деятельности (через связь many-to-many)
-        if filters.activity_name:
-            from infrastructure.database.models.activity import ACTIVITIES_TABLE
-
-            query = (
-                query.join(
-                    ORGANIZATION_ACTIVITIES_TABLE,
-                    ORGANIZATIONS_TABLE.c.id
-                    == ORGANIZATION_ACTIVITIES_TABLE.c.organization_id,
-                )
-                .join(
-                    ACTIVITIES_TABLE,
-                    ORGANIZATION_ACTIVITIES_TABLE.c.activity_id
-                    == ACTIVITIES_TABLE.c.id,
-                )
-                .where(ACTIVITIES_TABLE.c.name.ilike(f"%{filters.activity_name}%"))
+    async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]:
+        """Фильтрация организаций с явной подгрузкой зависимостей."""
+        async with async_session_factory() as session:
+            stmt = select(OrganizationModel).options(
+                selectinload(OrganizationModel.building),
+                selectinload(OrganizationModel.phones),
+                selectinload(OrganizationModel.activities),
             )
 
-        # Применяем limit и offset
-        if filters.limit:
-            query = query.limit(filters.limit)
-        if filters.offset:
-            query = query.offset(filters.offset)
+            activity_joined = False
+            for field, value in filters.items():
+                if field == "activity_name":
+                    # Фильтр по названию активности через JOIN через association table
+                    if not activity_joined:
+                        stmt = stmt.join(OrganizationModel.activities)
+                        activity_joined = True
+                    stmt = stmt.where(ActivityModel.name == value)
+                else:
+                    # Обычные поля модели
+                    try:
+                        field_obj = getattr(OrganizationModel, field)
+                        stmt = stmt.where(field_obj == value)
+                    except AttributeError:
+                        # Игнорируем неизвестные поля
+                        continue
 
-        result = await self.session.execute(query)
-        organizations = result.scalars().unique().all()
+            # Добавляем distinct, если был JOIN с activities (many-to-many может дать дубликаты)
+            if activity_joined:
+                stmt = stmt.distinct()
 
-        # Загружаем телефоны для всех организаций
-        for org in organizations:
-            await self._load_phones(org)
+            res = await session.execute(stmt)
+            results = [organization_model_to_entity(row[0]) for row in res.all()]
+            return results
 
-        return organizations
+    async def count(self, **filters: Any) -> int:
+        """Подсчет организаций с учетом фильтров."""
+        async with async_session_factory() as session:
+            stmt = select(func.count(OrganizationModel.oid.distinct()))
 
-    async def _load_phones(self, organization: OrganizationEntity) -> None:
-        """Загружает телефоны для организации."""
-        query = select(ORGANIZATION_PHONES_TABLE.c.phone).where(
-            ORGANIZATION_PHONES_TABLE.c.organization_id == UUID(str(organization.oid)),
-        )
-        result = await self.session.execute(query)
-        phones = [row[0] for row in result]
-        organization.phones = [
-            OrganizationPhoneValueObject(value=phone) for phone in phones
-        ]
+            activity_joined = False
+            for field, value in filters.items():
+                if field == "activity_name":
+                    # Фильтр по названию активности через JOIN через association table
+                    if not activity_joined:
+                        stmt = stmt.join(OrganizationModel.activities)
+                        activity_joined = True
+                    stmt = stmt.where(ActivityModel.name == value)
+                else:
+                    # Обычные поля модели
+                    try:
+                        field_obj = getattr(OrganizationModel, field)
+                        stmt = stmt.where(field_obj == value)
+                    except AttributeError:
+                        # Игнорируем неизвестные поля
+                        continue
+
+            res = await session.execute(stmt)
+            return res.scalar_one()

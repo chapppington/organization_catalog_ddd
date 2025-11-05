@@ -11,7 +11,10 @@ from application.commands.base import (
     CommandResultType,
     CommandType,
 )
-from application.exceptions.mediator import CommandHandlersNotRegisteredException
+from application.exceptions.mediator import (
+    CommandHandlersNotRegisteredException,
+    QueryHandlerNotRegisteredException,
+)
 from application.queries.base import (
     BaseQuery,
     BaseQueryHandler,
@@ -57,4 +60,10 @@ class Mediator:
         return [await handler.handle(command) for handler in handlers]
 
     async def handle_query(self, query: BaseQuery) -> QueryResultType:
-        return await self.queries_map[query.__class__].handle(query=query)
+        query_type = query.__class__
+        handler = self.queries_map.get(query_type)
+
+        if not handler:
+            raise QueryHandlerNotRegisteredException(query_type)
+
+        return await handler.handle(query=query)

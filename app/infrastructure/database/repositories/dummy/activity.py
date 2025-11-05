@@ -2,11 +2,13 @@ from dataclasses import (
     dataclass,
     field,
 )
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
 
 from domain.organization.entities import ActivityEntity
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
-from domain.organization.interfaces.repositories.filters import ActivityFilter
 
 
 @dataclass
@@ -26,22 +28,37 @@ class DummyInMemoryActivityRepository(BaseActivityRepository):
         except StopIteration:
             return None
 
-    async def filter(self, filters: ActivityFilter) -> Iterable[ActivityEntity]:
+    async def get_by_name(self, name: str) -> ActivityEntity | None:
+        try:
+            search_term = name.lower()
+            return next(
+                activity
+                for activity in self._saved_activities
+                if activity.name.as_generic_type().lower() == search_term
+            )
+        except StopIteration:
+            return None
+
+    async def filter(self, **filters: Any) -> Iterable[ActivityEntity]:
         results = self._saved_activities.copy()
 
-        if filters.name:
-            search_term = filters.name.lower()
+        if "name" in filters and filters["name"]:
+            search_term = filters["name"].lower()
             results = [
                 activity
                 for activity in results
                 if search_term in activity.name.as_generic_type().lower()
             ]
 
-        if filters.parent_id:
+        if "parent_id" in filters and filters["parent_id"]:
             results = [
                 activity
                 for activity in results
-                if activity.parent and activity.parent.oid == filters.parent_id
+                if activity.parent and activity.parent.oid == filters["parent_id"]
             ]
 
         return results
+
+    async def count(self, **filters: Any) -> int:
+        results = list(await self.filter(**filters))
+        return len(results)

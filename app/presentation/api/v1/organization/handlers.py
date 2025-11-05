@@ -60,31 +60,6 @@ async def create_organization(
 
 
 @router.get(
-    "/{organization_id}",
-    status_code=status.HTTP_200_OK,
-    response_model=ApiResponse[OrganizationDetailSchema],
-)
-async def get_organization_by_id(
-    organization_id: str,
-    container=Depends(init_container),
-) -> ApiResponse[OrganizationDetailSchema]:
-    """Получает организацию по ID."""
-    mediator: Mediator = container.resolve(Mediator)
-    query = GetOrganizationByIdQuery(organization_id=organization_id)
-    organization = await mediator.handle_query(query)
-
-    if not organization:
-        return ApiResponse[OrganizationDetailSchema](
-            data={},
-            errors=[{"message": "Organization not found"}],
-        )
-
-    return ApiResponse[OrganizationDetailSchema](
-        data=OrganizationDetailSchema.from_entity(organization),
-    )
-
-
-@router.get(
     "",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]],
@@ -259,4 +234,29 @@ async def get_organizations_by_rectangle(
                 offset=pagination.offset,
             ),
         ),
+    )
+
+
+@router.get(
+    "/{organization_id}",
+    status_code=status.HTTP_200_OK,
+    response_model=ApiResponse[OrganizationDetailSchema],
+)
+async def get_organization_by_id(
+    organization_id: str,
+    container=Depends(init_container),
+) -> ApiResponse[OrganizationDetailSchema]:
+    """Получает организацию по ID."""
+    mediator: Mediator = container.resolve(Mediator)
+    query = GetOrganizationByIdQuery(organization_id=organization_id)
+    organization = await mediator.handle_query(query)
+
+    if not organization:
+        return ApiResponse[OrganizationDetailSchema](
+            data={},
+            errors=[{"message": "Organization not found"}],
+        )
+
+    return ApiResponse[OrganizationDetailSchema](
+        data=OrganizationDetailSchema.from_entity(organization),
     )

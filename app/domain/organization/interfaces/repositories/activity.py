@@ -3,10 +3,13 @@ from abc import (
     abstractmethod,
 )
 from dataclasses import dataclass
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
+from uuid import UUID
 
 from domain.organization.entities import ActivityEntity
-from domain.organization.interfaces.repositories.filters import ActivityFilter
 
 
 @dataclass
@@ -15,7 +18,13 @@ class BaseActivityRepository(ABC):
     async def add(self, activity: ActivityEntity) -> None: ...
 
     @abstractmethod
-    async def get_by_id(self, activity_id: str) -> ActivityEntity | None: ...
+    async def get_by_id(self, activity_id: UUID) -> ActivityEntity | None: ...
 
     @abstractmethod
-    async def filter(self, filters: ActivityFilter) -> Iterable[ActivityEntity]: ...
+    async def get_by_name(self, name: str) -> ActivityEntity | None: ...
+
+    @abstractmethod
+    async def filter(self, **filters: Any) -> Iterable[ActivityEntity]: ...
+
+    @abstractmethod
+    async def count(self, **filters: Any) -> int: ...

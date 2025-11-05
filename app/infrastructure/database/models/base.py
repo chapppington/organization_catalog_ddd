@@ -1,39 +1,37 @@
 import datetime
+from uuid import UUID
 
-from sqlalchemy import (
-    MetaData,
-    sql,
-)
+from sqlalchemy import sql
+from sqlalchemy.dialects.postgresql import UUID as UUIDType
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
     mapped_column,
-    registry,
 )
 
 
-convention = {
-    "ix": "ix_%(column_0_label)s",  # INDEX
-    "uq": "uq_%(table_name)s_%(column_0_N_name)s",  # UNIQUE
-    "ck": "ck_%(table_name)s_%(constraint_name)s",  # CHECK
-    "fk": "fk_%(table_name)s_%(column_0_N_name)s_%(referred_table_name)s",  # FOREIGN KEY
-    "pk": "pk_%(table_name)s",  # PRIMARY KEY
-}
-
-mapper_registry = registry(metadata=MetaData(naming_convention=convention))
-
-
 class BaseModel(DeclarativeBase):
-    registry = mapper_registry
-    metadata = mapper_registry.metadata
+    repr_cols_num = 3
+    repr_cols = tuple()
+
+    def __repr__(self):
+        """Relationships не используются в repr(), т.к.
+
+        могут вести к неожиданным подгрузкам
+
+        """
+        cols = []
+        for idx, col in enumerate(self.__table__.columns.keys()):
+            if col in self.repr_cols or idx < self.repr_cols_num:
+                cols.append(f"{col}={getattr(self, col)}")
+
+        return f"<{self.__class__.__name__} {', '.join(cols)}>"
 
 
 class TimedBaseModel(BaseModel):
-    """An abstract base model that adds created_at and updated_at timestamp
-    fields to the model."""
-
     __abstract__ = True
 
+    oid: Mapped[UUID] = mapped_column(UUIDType[UUID](as_uuid=True), primary_key=True)
     created_at: Mapped[datetime.datetime] = mapped_column(
         nullable=False,
         server_default=sql.func.now(),

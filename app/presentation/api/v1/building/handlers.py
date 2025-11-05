@@ -9,7 +9,6 @@ from application.commands.building import CreateBuildingCommand
 from application.init import init_container
 from application.mediator import Mediator
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
-from domain.organization.interfaces.repositories.filters import BuildingFilter
 from presentation.api.filters import (
     PaginationIn,
     PaginationOut,
@@ -90,12 +89,14 @@ async def get_buildings(
 ) -> ApiResponse[ListPaginatedResponse[BuildingResponseSchema]]:
     """Получает список зданий с фильтрацией."""
     repository: BaseBuildingRepository = container.resolve(BaseBuildingRepository)
-    filters = BuildingFilter(
-        address=address,
-        latitude=latitude,
-        longitude=longitude,
-    )
-    buildings = list(await repository.filter(filters))
+    filters_dict = {}
+    if address is not None:
+        filters_dict["address"] = address
+    if latitude is not None:
+        filters_dict["latitude"] = latitude
+    if longitude is not None:
+        filters_dict["longitude"] = longitude
+    buildings = list(await repository.filter(**filters_dict))
 
     items = [
         BuildingResponseSchema.from_entity(building)

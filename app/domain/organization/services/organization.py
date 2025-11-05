@@ -11,11 +11,6 @@ from domain.organization.interfaces.repositories import (
     BaseBuildingRepository,
     BaseOrganizationRepository,
 )
-from domain.organization.interfaces.repositories.filters import (
-    ActivityFilter,
-    BuildingFilter,
-    OrganizationFilter,
-)
 from domain.organization.value_objects import (
     OrganizationNameValueObject,
     OrganizationPhoneValueObject,
@@ -49,22 +44,21 @@ class OrganizationService:
 
         """
         # Находим здание по адресу
-        building_filter = BuildingFilter(address=address)
-        buildings = list(await self.building_repository.filter(building_filter))
-        if not buildings:
+        building = await self.building_repository.get_by_address(address)
+
+        if not building:
             raise BuildingNotFoundException(address=address)
-        building = buildings[0]
 
         # Находим все виды деятельности по названиям
         activity_entities = []
+
         for activity_name in activities:
-            activity_filter = ActivityFilter(name=activity_name)
-            found_activities = list(
-                await self.activity_repository.filter(activity_filter),
-            )
-            if not found_activities:
+            activity = await self.activity_repository.get_by_name(name=activity_name)
+
+            if not activity:
                 raise ActivityNotFoundException(activity_id=activity_name)
-            activity_entities.append(found_activities[0])
+
+            activity_entities.append(activity)
 
         # Создаем организацию
         organization = OrganizationEntity(
@@ -73,7 +67,9 @@ class OrganizationService:
             phones=[OrganizationPhoneValueObject(phone) for phone in phones],
             activities=activity_entities,
         )
+
         await self.organization_repository.add(organization)
+
         return organization
 
     async def get_organization_by_id(
@@ -90,8 +86,7 @@ class OrganizationService:
         offset: int,
     ) -> Iterable[OrganizationEntity]:
         """Поиск организации по названию."""
-        filters = OrganizationFilter(name=name)
-        organizations = list(await self.organization_repository.filter(filters))
+        organizations = list(await self.organization_repository.filter(name=name))
         return organizations[offset : offset + limit]
 
     async def get_organizations_by_address(
@@ -101,9 +96,23 @@ class OrganizationService:
         offset: int,
     ) -> Iterable[OrganizationEntity]:
         """Список всех организаций находящихся по указанному адресу."""
-        filters = OrganizationFilter(address=address)
-        organizations = list(await self.organization_repository.filter(filters))
-        return organizations[offset : offset + limit]
+        # Ищем здания по частичному совпадению адреса
+        buildings = await self.building_repository.filter(address=address)
+        buildings_list = list(buildings)
+
+        if not buildings_list:
+            return []
+
+        # Собираем организации из всех найденных зданий
+        all_organizations = []
+        for building in buildings_list:
+            organizations = await self.organization_repository.filter(
+                building_id=building.oid,
+            )
+            all_organizations.extend(organizations)
+
+        organizations_list = list(all_organizations)
+        return organizations_list[offset : offset + limit]
 
     async def get_organizations_by_activity(
         self,
@@ -124,8 +133,7 @@ class OrganizationService:
             return []
 
         # Получаем всех детей из дерева деятельности
-        activity_filters = ActivityFilter(parent_id=activity_id)
-        child_activities = await self.activity_repository.filter(activity_filters)
+        child_activities = await self.activity_repository.filter(parent_id=activity_id)
 
         # Собираем все названия деятельностей (корень + дети)
         activity_names = [root_activity.name.as_generic_type()]
@@ -136,8 +144,9 @@ class OrganizationService:
         # Ищем организации по каждой деятельности
         all_organizations = []
         for activity_name in activity_names:
-            filters = OrganizationFilter(activity_name=activity_name)
-            organizations = await self.organization_repository.filter(filters)
+            organizations = await self.organization_repository.filter(
+                activity_name=activity_name,
+            )
             all_organizations.extend(organizations)
 
         # Убираем дубликаты через set (используется __hash__ по oid)
@@ -155,21 +164,17 @@ class OrganizationService:
     ) -> Iterable[OrganizationEntity]:
         """Список организаций в заданном радиусе относительно точки на
         карте."""
-        building_filters = BuildingFilter(
+        buildings = await self.building_repository.filter(
             latitude=latitude,
             longitude=longitude,
             radius=radius,
         )
-        buildings = await self.building_repository.filter(building_filters)
 
         # Ищем организации в найденных зданиях
         all_organizations = []
         for building in buildings:
-            organization_filters = OrganizationFilter(
-                address=building.address.as_generic_type(),
-            )
             organizations = await self.organization_repository.filter(
-                organization_filters,
+                address=building.address.as_generic_type(),
             )
             all_organizations.extend(organizations)
 
@@ -185,22 +190,19 @@ class OrganizationService:
         offset: int,
     ) -> Iterable[OrganizationEntity]:
         """Список организаций в прямоугольной области."""
-        building_filters = BuildingFilter(
+
+        buildings = await self.building_repository.filter(
             lat_min=lat_min,
             lat_max=lat_max,
             lon_min=lon_min,
             lon_max=lon_max,
         )
-        buildings = await self.building_repository.filter(building_filters)
 
         # Ищем организации в найденных зданиях
         all_organizations = []
         for building in buildings:
-            organization_filters = OrganizationFilter(
-                address=building.address.as_generic_type(),
-            )
             organizations = await self.organization_repository.filter(
-                organization_filters,
+                address=building.address.as_generic_type(),
             )
             all_organizations.extend(organizations)
 

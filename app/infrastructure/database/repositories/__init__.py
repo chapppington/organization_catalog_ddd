@@ -1,12 +1,10 @@
-from .activity import ActivityRepository
-from .base import BaseSQLAlchemyRepository
-from .building import BuildingRepository
-from .organization import OrganizationRepository
+from .activity import SQLAlchemyActivityRepository
+from .building import SQLAlchemyBuildingRepository
+from .organization import SQLAlchemyOrganizationRepository
 
 
 __all__ = [
-    "ActivityRepository",
-    "BaseSQLAlchemyRepository",
-    "BuildingRepository",
-    "OrganizationRepository",
+    "SQLAlchemyActivityRepository",
+    "SQLAlchemyBuildingRepository",
+    "SQLAlchemyOrganizationRepository",
 ]

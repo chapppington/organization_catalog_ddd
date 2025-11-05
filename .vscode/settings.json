@@ -25,6 +25,7 @@
   "python.testing.pytestEnabled": true,
   "cSpell.words": [
     "autoflake",
+    "backref",
     "BASICAUTH",
     "BOOTSTRAPSERVERS",
     "confluentinc",

@@ -9,7 +9,6 @@ from application.commands.activity import CreateActivityCommand
 from application.init import init_container
 from application.mediator import Mediator
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
-from domain.organization.interfaces.repositories.filters import ActivityFilter
 from presentation.api.filters import (
     PaginationIn,
     PaginationOut,
@@ -88,8 +87,12 @@ async def get_activities(
 ) -> ApiResponse[ListPaginatedResponse[ActivityResponseSchema]]:
     """Получает список видов деятельности с фильтрацией."""
     repository: BaseActivityRepository = container.resolve(BaseActivityRepository)
-    filters = ActivityFilter(name=name, parent_id=parent_id)
-    activities = list(await repository.filter(filters))
+    filters_dict = {}
+    if name is not None:
+        filters_dict["name"] = name
+    if parent_id is not None:
+        filters_dict["parent_id"] = parent_id
+    activities = list(await repository.filter(**filters_dict))
 
     items = [
         ActivityResponseSchema.from_entity(activity)

@@ -3,11 +3,13 @@ from dataclasses import (
     dataclass,
     field,
 )
-from typing import Iterable
+from typing import (
+    Any,
+    Iterable,
+)
 
 from domain.organization.entities import BuildingEntity
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
-from domain.organization.interfaces.repositories.filters import BuildingFilter
 
 
 @dataclass
@@ -53,51 +55,75 @@ class DummyInMemoryBuildingRepository(BaseBuildingRepository):
         except StopIteration:
             return None
 
-    async def filter(self, filters: BuildingFilter) -> Iterable[BuildingEntity]:
+    async def get_by_address(self, address: str) -> BuildingEntity | None:
+        try:
+            search_term = address.lower()
+            return next(
+                building
+                for building in self._saved_buildings
+                if building.address.as_generic_type().lower() == search_term
+            )
+        except StopIteration:
+            return None
+
+    async def filter(self, **filters: Any) -> Iterable[BuildingEntity]:
         results = self._saved_buildings.copy()
 
-        if filters.address:
-            search_term = filters.address.lower()
+        if "address" in filters and filters["address"]:
+            search_term = filters["address"].lower()
             results = [
                 building
                 for building in results
-                if search_term in building.address.as_generic_type().lower()
+                if building.address.as_generic_type().lower() == search_term
             ]
 
         # Фильтрация по радиусу
         if (
-            filters.latitude is not None
-            and filters.longitude is not None
-            and filters.radius is not None
+            "latitude" in filters
+            and "longitude" in filters
+            and "radius" in filters
+            and filters["latitude"] is not None
+            and filters["longitude"] is not None
+            and filters["radius"] is not None
         ):
             filtered = []
             for building in results:
                 distance = self._calculate_distance(
-                    filters.latitude,
-                    filters.longitude,
+                    filters["latitude"],
+                    filters["longitude"],
                     building.coordinates.latitude,
                     building.coordinates.longitude,
                 )
-                if distance <= filters.radius:
+                if distance <= filters["radius"]:
                     filtered.append(building)
             results = filtered
 
         # Фильтрация по прямоугольной области
         if (
-            filters.lat_min is not None
-            and filters.lat_max is not None
-            and filters.lon_min is not None
-            and filters.lon_max is not None
+            "lat_min" in filters
+            and "lat_max" in filters
+            and "lon_min" in filters
+            and "lon_max" in filters
+            and filters["lat_min"] is not None
+            and filters["lat_max"] is not None
+            and filters["lon_min"] is not None
+            and filters["lon_max"] is not None
         ):
             results = [
                 building
                 for building in results
                 if (
-                    filters.lat_min <= building.coordinates.latitude <= filters.lat_max
-                    and filters.lon_min
+                    filters["lat_min"]
+                    <= building.coordinates.latitude
+                    <= filters["lat_max"]
+                    and filters["lon_min"]
                     <= building.coordinates.longitude
-                    <= filters.lon_max
+                    <= filters["lon_max"]
                 )
             ]
 
         return results
+
+    async def count(self, **filters: Any) -> int:
+        results = list(await self.filter(**filters))
+        return len(results)
