@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -13,36 +14,36 @@ from domain.organization.entities import (
 # Activity Schemas
 class CreateActivityRequestSchema(BaseModel):
     name: str
-    parent_id: Optional[str] = None
+    parent_id: Optional[UUID] = None
 
 
 class ActivityResponseSchema(BaseModel):
-    oid: str
+    oid: UUID
     name: str
-    parent_id: Optional[str] = None
+    parent_id: Optional[UUID] = None
 
     @classmethod
     def from_entity(cls, entity: ActivityEntity) -> "ActivityResponseSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             name=entity.name.as_generic_type(),
-            parent_id=str(entity.parent.oid) if entity.parent else None,
+            parent_id=entity.parent.oid if entity.parent else None,
         )
 
 
 class ActivityDetailSchema(BaseModel):
-    oid: str
+    oid: UUID
     name: str
-    parent_id: Optional[str] = None
+    parent_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
 
     @classmethod
     def from_entity(cls, entity: ActivityEntity) -> "ActivityDetailSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             name=entity.name.as_generic_type(),
-            parent_id=str(entity.parent.oid) if entity.parent else None,
+            parent_id=entity.parent.oid if entity.parent else None,
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )
@@ -56,7 +57,7 @@ class CreateBuildingRequestSchema(BaseModel):
 
 
 class BuildingResponseSchema(BaseModel):
-    oid: str
+    oid: UUID
     address: str
     latitude: float
     longitude: float
@@ -64,7 +65,7 @@ class BuildingResponseSchema(BaseModel):
     @classmethod
     def from_entity(cls, entity: BuildingEntity) -> "BuildingResponseSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             address=entity.address.as_generic_type(),
             latitude=entity.coordinates.latitude,
             longitude=entity.coordinates.longitude,
@@ -72,7 +73,7 @@ class BuildingResponseSchema(BaseModel):
 
 
 class BuildingDetailSchema(BaseModel):
-    oid: str
+    oid: UUID
     address: str
     latitude: float
     longitude: float
@@ -82,7 +83,7 @@ class BuildingDetailSchema(BaseModel):
     @classmethod
     def from_entity(cls, entity: BuildingEntity) -> "BuildingDetailSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             address=entity.address.as_generic_type(),
             latitude=entity.coordinates.latitude,
             longitude=entity.coordinates.longitude,
@@ -100,25 +101,25 @@ class CreateOrganizationRequestSchema(BaseModel):
 
 
 class OrganizationResponseSchema(BaseModel):
-    oid: str
+    oid: UUID
     name: str
-    building_id: str
+    building_id: UUID
     phones: list[str]
-    activity_ids: list[str]
+    activity_ids: list[UUID]
 
     @classmethod
     def from_entity(cls, entity: OrganizationEntity) -> "OrganizationResponseSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             name=entity.name.as_generic_type(),
-            building_id=str(entity.building.oid),
+            building_id=entity.building.oid,
             phones=[phone.as_generic_type() for phone in entity.phones],
-            activity_ids=[str(activity.oid) for activity in entity.activities],
+            activity_ids=[activity.oid for activity in entity.activities],
         )
 
 
 class OrganizationDetailSchema(BaseModel):
-    oid: str
+    oid: UUID
     name: str
     building: BuildingDetailSchema
     phones: list[str]
@@ -129,7 +130,7 @@ class OrganizationDetailSchema(BaseModel):
     @classmethod
     def from_entity(cls, entity: OrganizationEntity) -> "OrganizationDetailSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             name=entity.name.as_generic_type(),
             building=BuildingDetailSchema.from_entity(entity.building),
             phones=[phone.as_generic_type() for phone in entity.phones],

@@ -15,13 +15,13 @@ from domain.organization.interfaces.repositories.activity import BaseActivityRep
 
 @dataclass(frozen=True)
 class GetActivityByIdQuery(BaseQuery):
-    activity_id: str
+    activity_id: UUID
 
 
 @dataclass(frozen=True)
 class GetActivitiesQuery(BaseQuery):
     name: str | None = None
-    parent_id: str | None = None
+    parent_id: UUID | None = None
     limit: int = 10
     offset: int = 0
 
@@ -36,7 +36,7 @@ class GetActivityByIdQueryHandler(
         self,
         query: GetActivityByIdQuery,
     ) -> ActivityEntity | None:
-        return await self.activity_repository.get_by_id(UUID(query.activity_id))
+        return await self.activity_repository.get_by_id(query.activity_id)
 
 
 @dataclass(frozen=True)
@@ -56,7 +56,7 @@ class GetActivitiesQueryHandler(
         if query.name is not None:
             filters_dict["name"] = query.name
         if query.parent_id is not None:
-            filters_dict["parent_id"] = UUID(query.parent_id)
+            filters_dict["parent_id"] = query.parent_id
 
         activities = list(await self.activity_repository.filter(**filters_dict))
         total = len(activities)

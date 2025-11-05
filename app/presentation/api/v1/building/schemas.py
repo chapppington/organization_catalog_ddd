@@ -1,4 +1,5 @@
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -12,7 +13,7 @@ class CreateBuildingRequestSchema(BaseModel):
 
 
 class BuildingResponseSchema(BaseModel):
-    oid: str
+    oid: UUID
     address: str
     latitude: float
     longitude: float
@@ -20,7 +21,7 @@ class BuildingResponseSchema(BaseModel):
     @classmethod
     def from_entity(cls, entity: BuildingEntity) -> "BuildingResponseSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             address=entity.address.as_generic_type(),
             latitude=entity.coordinates.latitude,
             longitude=entity.coordinates.longitude,
@@ -28,7 +29,7 @@ class BuildingResponseSchema(BaseModel):
 
 
 class BuildingDetailSchema(BaseModel):
-    oid: str
+    oid: UUID
     address: str
     latitude: float
     longitude: float
@@ -38,7 +39,7 @@ class BuildingDetailSchema(BaseModel):
     @classmethod
     def from_entity(cls, entity: BuildingEntity) -> "BuildingDetailSchema":
         return cls(
-            oid=str(entity.oid),
+            oid=entity.oid,
             address=entity.address.as_generic_type(),
             latitude=entity.coordinates.latitude,
             longitude=entity.coordinates.longitude,

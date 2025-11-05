@@ -15,7 +15,7 @@ from domain.organization.interfaces.repositories.building import BaseBuildingRep
 
 @dataclass(frozen=True)
 class GetBuildingByIdQuery(BaseQuery):
-    building_id: str
+    building_id: UUID
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ class GetBuildingByIdQueryHandler(
         self,
         query: GetBuildingByIdQuery,
     ) -> BuildingEntity | None:
-        return await self.building_repository.get_by_id(UUID(query.building_id))
+        return await self.building_repository.get_by_id(query.building_id)
 
 
 @dataclass(frozen=True)

@@ -18,7 +18,7 @@ async def test_get_activity_by_id_query(mediator: Mediator):
 
     # Ищем по ID
     result = await mediator.handle_query(
-        GetActivityByIdQuery(activity_id=str(activity.oid)),
+        GetActivityByIdQuery(activity_id=activity.oid),
     )
 
     assert result is not None
@@ -80,7 +80,7 @@ async def test_get_activities_query_with_parent_id_filter(mediator: Mediator):
 
     # Ищем по parent_id
     results, total = await mediator.handle_query(
-        GetActivitiesQuery(parent_id=str(parent.oid), limit=10, offset=0),
+        GetActivitiesQuery(parent_id=parent.oid, limit=10, offset=0),
     )
 
     results_list = list(results)
@@ -111,7 +111,7 @@ async def test_get_activities_query_with_both_filters(mediator: Mediator):
     results, total = await mediator.handle_query(
         GetActivitiesQuery(
             name="Мясная продукция",
-            parent_id=str(parent.oid),
+            parent_id=parent.oid,
             limit=10,
             offset=0,
         ),

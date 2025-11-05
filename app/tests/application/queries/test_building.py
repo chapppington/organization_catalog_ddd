@@ -22,7 +22,7 @@ async def test_get_building_by_id_query(mediator: Mediator):
 
     # Ищем по ID
     result = await mediator.handle_query(
-        GetBuildingByIdQuery(building_id=str(building.oid)),
+        GetBuildingByIdQuery(building_id=building.oid),
     )
 
     assert result is not None
