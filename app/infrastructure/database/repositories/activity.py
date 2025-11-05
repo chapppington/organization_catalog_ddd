@@ -19,14 +19,12 @@ from infrastructure.database.models.activity import ActivityModel
 
 class SQLAlchemyActivityRepository(BaseActivityRepository):
     async def add(self, activity: ActivityEntity) -> None:
-        """Добавить активность."""
         async with async_session_factory() as session:
             model = activity_entity_to_model(activity)
             session.add(model)
             await session.commit()
 
     async def get_by_id(self, activity_id: UUID) -> ActivityEntity | None:
-        """Получить активность по ID."""
         async with async_session_factory() as session:
             stmt = (
                 select(ActivityModel)
@@ -39,7 +37,6 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
             return activity_model_to_entity(result) if result else None
 
     async def get_by_name(self, name: str) -> ActivityEntity | None:
-        """Получить активность по имени."""
         async with async_session_factory() as session:
             stmt = (
                 select(ActivityModel)
@@ -52,7 +49,6 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
             return activity_model_to_entity(result) if result else None
 
     async def filter(self, **filters: Any) -> Iterable[ActivityEntity]:
-        """Фильтрация активностей."""
         async with async_session_factory() as session:
             stmt = select(ActivityModel).options(selectinload(ActivityModel.parent))
 

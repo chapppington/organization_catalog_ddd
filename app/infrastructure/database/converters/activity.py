@@ -4,7 +4,6 @@ from infrastructure.database.models.activity import ActivityModel
 
 
 def activity_entity_to_model(entity: ActivityEntity) -> ActivityModel:
-    """Конвертирует ActivityEntity в ActivityModel."""
     return ActivityModel(
         oid=entity.oid,
         name=entity.name.as_generic_type(),
@@ -15,7 +14,6 @@ def activity_entity_to_model(entity: ActivityEntity) -> ActivityModel:
 
 
 def activity_model_to_entity(model: ActivityModel) -> ActivityEntity:
-    """Конвертирует ActivityModel в ActivityEntity."""
     return ActivityEntity(
         oid=model.oid,
         name=ActivityNameValueObject(value=model.name),

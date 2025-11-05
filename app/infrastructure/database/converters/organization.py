@@ -17,12 +17,6 @@ from infrastructure.database.models.organization import (
 
 
 def organization_entity_to_model(entity: OrganizationEntity) -> OrganizationModel:
-    """Конвертирует OrganizationEntity в OrganizationModel.
-
-    Примечание: phones и activities нужно добавлять отдельно через
-    relationships.
-
-    """
     return OrganizationModel(
         oid=entity.oid,
         name=entity.name.as_generic_type(),
@@ -33,7 +27,6 @@ def organization_entity_to_model(entity: OrganizationEntity) -> OrganizationMode
 
 
 def organization_model_to_entity(model: OrganizationModel) -> OrganizationEntity:
-    """Конвертирует OrganizationModel в OrganizationEntity."""
     return OrganizationEntity(
         oid=model.oid,
         name=OrganizationNameValueObject(value=model.name),
@@ -49,8 +42,6 @@ def organization_phones_to_models(
     organization_id: UUID,
     entity: OrganizationEntity,
 ) -> list[OrganizationPhoneModel]:
-    """Конвертирует список телефонов организации в список
-    OrganizationPhoneModel."""
     return [
         OrganizationPhoneModel(
             oid=uuid4(),
@@ -64,6 +55,4 @@ def organization_phones_to_models(
 
 
 def organization_activities_ids(entity: OrganizationEntity) -> list[UUID]:
-    """Возвращает список UUID активностей организации для связи many-to-
-    many."""
     return [activity.oid for activity in entity.activities]

@@ -7,7 +7,6 @@ from infrastructure.database.models.building import BuildingModel
 
 
 def building_entity_to_model(entity: BuildingEntity) -> BuildingModel:
-    """Конвертирует BuildingEntity в BuildingModel."""
     return BuildingModel(
         oid=entity.oid,
         address=entity.address.as_generic_type(),
@@ -19,7 +18,6 @@ def building_entity_to_model(entity: BuildingEntity) -> BuildingModel:
 
 
 def building_model_to_entity(model: BuildingModel) -> BuildingEntity:
-    """Конвертирует BuildingModel в BuildingEntity."""
     return BuildingEntity(
         oid=model.oid,
         address=BuildingAddressValueObject(value=model.address),

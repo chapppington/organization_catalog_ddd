@@ -65,14 +65,12 @@ class SQLAlchemyBuildingRepository(BaseBuildingRepository):
         return distance_expr
 
     async def add(self, building: BuildingEntity) -> None:
-        """Добавить здание."""
         async with async_session_factory() as session:
             model = building_entity_to_model(building)
             session.add(model)
             await session.commit()
 
     async def get_by_id(self, building_id: UUID) -> BuildingEntity | None:
-        """Получить здание по ID."""
         async with async_session_factory() as session:
             stmt = select(BuildingModel).where(BuildingModel.oid == building_id)
             res = await session.execute(stmt)
@@ -81,7 +79,6 @@ class SQLAlchemyBuildingRepository(BaseBuildingRepository):
             return building_model_to_entity(result) if result else None
 
     async def get_by_address(self, address: str) -> BuildingEntity | None:
-        """Получить здание по адресу."""
         async with async_session_factory() as session:
             stmt = select(BuildingModel).where(BuildingModel.address == address)
             res = await session.execute(stmt)
@@ -90,7 +87,6 @@ class SQLAlchemyBuildingRepository(BaseBuildingRepository):
             return building_model_to_entity(result) if result else None
 
     async def filter(self, **filters: Any) -> Iterable[BuildingEntity]:
-        """Фильтрация зданий."""
         async with async_session_factory() as session:
             stmt = select(BuildingModel)
 

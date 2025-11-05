@@ -30,11 +30,10 @@ from infrastructure.database.models.organization import (
 
 class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
     async def add(self, organization: OrganizationEntity) -> None:
-        """Добавить организацию с телефонами и активностями."""
         async with async_session_factory() as session:
             org_model = organization_entity_to_model(organization)
             session.add(org_model)
-            await session.flush()  # привязывает org_model к сессии
+            await session.flush()
 
             # Телефоны
             phones_models = organization_phones_to_models(org_model.oid, organization)
@@ -43,7 +42,6 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             # Активности
             if organization.activities:
                 activities_ids = organization_activities_ids(organization)
-                # Добавляем связи напрямую через association table, чтобы избежать lazy loading
                 values = [
                     {"organization_id": org_model.oid, "activity_id": activity_id}
                     for activity_id in activities_ids
@@ -53,7 +51,6 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             await session.commit()
 
     async def get_by_id(self, organization_id: UUID) -> OrganizationEntity | None:
-        """Получить организацию по ID с явной подгрузкой всех зависимостей."""
         async with async_session_factory() as session:
             stmt = (
                 select(OrganizationModel)
@@ -69,7 +66,6 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             return organization_model_to_entity(result) if result else None
 
     async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]:
-        """Фильтрация организаций с явной подгрузкой зависимостей."""
         async with async_session_factory() as session:
             stmt = select(OrganizationModel).options(
                 selectinload(OrganizationModel.building),
@@ -80,24 +76,19 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             activity_joined = False
             for field, value in filters.items():
                 if field == "activity_name":
-                    # Фильтр по названию активности через JOIN через association table
                     if not activity_joined:
                         stmt = stmt.join(OrganizationModel.activities)
                         activity_joined = True
                     stmt = stmt.where(ActivityModel.name == value)
                 elif field == "name":
-                    # Частичный поиск по имени организации
                     stmt = stmt.where(OrganizationModel.name.ilike(f"%{value}%"))
                 else:
-                    # Обычные поля модели
                     try:
                         field_obj = getattr(OrganizationModel, field)
                         stmt = stmt.where(field_obj == value)
                     except AttributeError:
-                        # Игнорируем неизвестные поля
                         continue
 
-            # Добавляем distinct, если был JOIN с activities (many-to-many может дать дубликаты)
             if activity_joined:
                 stmt = stmt.distinct()
 

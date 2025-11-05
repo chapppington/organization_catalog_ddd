@@ -35,7 +35,6 @@ class ActivityModel(TimedBaseModel):
         lazy="selectin",
     )
 
-    # Используем строку для OrganizationModel, чтобы избежать кросс-импорта
     organizations: Mapped[List["OrganizationModel"]] = relationship(  # noqa: F821
         "OrganizationModel",
         secondary="organization_activity",
