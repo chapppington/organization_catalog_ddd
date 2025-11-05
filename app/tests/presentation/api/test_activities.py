@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi import (
     FastAPI,
     status,
@@ -86,9 +88,7 @@ async def test_get_activity_by_id_not_found(
     app: FastAPI,
     client: TestClient,
 ):
-    from uuid import uuid4
-
-    activity_id = str(uuid4())
+    activity_id = uuid4()
     url = app.url_path_for("get_activity_by_id", activity_id=activity_id)
     response: Response = client.get(url=url)
 

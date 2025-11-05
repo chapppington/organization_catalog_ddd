@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi import (
     FastAPI,
     status,
@@ -126,9 +128,7 @@ async def test_get_building_by_id_not_found(
     app: FastAPI,
     client: TestClient,
 ):
-    from uuid import uuid4
-
-    building_id = str(uuid4())
+    building_id = uuid4()
     url = app.url_path_for("get_building_by_id", building_id=building_id)
     response: Response = client.get(url=url)
 

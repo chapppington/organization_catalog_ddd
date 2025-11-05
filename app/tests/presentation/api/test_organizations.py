@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from fastapi import (
     FastAPI,
     status,
@@ -269,9 +271,7 @@ async def test_get_organization_by_id_not_found(
     app: FastAPI,
     client: TestClient,
 ):
-    from uuid import uuid4
-
-    organization_id = str(uuid4())
+    organization_id = uuid4()
     url = app.url_path_for("get_organization_by_id", organization_id=organization_id)
     response: Response = client.get(url=url)
 
