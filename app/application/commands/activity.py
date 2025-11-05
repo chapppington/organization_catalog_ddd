@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from application.commands.base import (
     BaseCommand,
@@ -11,7 +12,7 @@ from domain.organization.services import ActivityService
 @dataclass(frozen=True)
 class CreateActivityCommand(BaseCommand):
     name: str
-    parent_id: str | None = None
+    parent_id: UUID | None = None
 
 
 @dataclass(frozen=True)

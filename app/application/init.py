@@ -18,6 +18,18 @@ from application.commands.organization import (
     CreateOrganizationCommandHandler,
 )
 from application.mediator import Mediator
+from application.queries.activity import (
+    GetActivitiesQuery,
+    GetActivitiesQueryHandler,
+    GetActivityByIdQuery,
+    GetActivityByIdQueryHandler,
+)
+from application.queries.building import (
+    GetBuildingByIdQuery,
+    GetBuildingByIdQueryHandler,
+    GetBuildingsQuery,
+    GetBuildingsQueryHandler,
+)
 from application.queries.organization import (
     GetOrganizationByIdQuery,
     GetOrganizationByIdQueryHandler,
@@ -89,6 +101,10 @@ def _init_container() -> Container:
     container.register(CreateOrganizationCommandHandler)
 
     # Регистрируем query handlers
+    container.register(GetActivityByIdQueryHandler)
+    container.register(GetActivitiesQueryHandler)
+    container.register(GetBuildingByIdQueryHandler)
+    container.register(GetBuildingsQueryHandler)
     container.register(GetOrganizationByIdQueryHandler)
     container.register(GetOrganizationsByAddressQueryHandler)
     container.register(GetOrganizationsByActivityQueryHandler)
@@ -115,6 +131,22 @@ def _init_container() -> Container:
         )
 
         # Регистрируем queries
+        mediator.register_query(
+            GetActivityByIdQuery,
+            container.resolve(GetActivityByIdQueryHandler),
+        )
+        mediator.register_query(
+            GetActivitiesQuery,
+            container.resolve(GetActivitiesQueryHandler),
+        )
+        mediator.register_query(
+            GetBuildingByIdQuery,
+            container.resolve(GetBuildingByIdQueryHandler),
+        )
+        mediator.register_query(
+            GetBuildingsQuery,
+            container.resolve(GetBuildingsQueryHandler),
+        )
         mediator.register_query(
             GetOrganizationByIdQuery,
             container.resolve(GetOrganizationByIdQueryHandler),

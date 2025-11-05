@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from domain.organization.entities import ActivityEntity
 from domain.organization.exceptions import ActivityNotFoundException
@@ -13,7 +14,7 @@ class ActivityService:
     async def create_activity(
         self,
         name: str,
-        parent_id: str | None = None,
+        parent_id: UUID | None = None,
     ) -> ActivityEntity:
         parent = None
         if parent_id:

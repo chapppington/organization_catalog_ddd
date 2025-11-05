@@ -8,7 +8,10 @@ from fastapi import (
 from application.commands.activity import CreateActivityCommand
 from application.init import init_container
 from application.mediator import Mediator
-from domain.organization.interfaces.repositories.activity import BaseActivityRepository
+from application.queries.activity import (
+    GetActivitiesQuery,
+    GetActivityByIdQuery,
+)
 from presentation.api.filters import (
     PaginationIn,
     PaginationOut,
@@ -60,8 +63,9 @@ async def get_activity_by_id(
     container=Depends(init_container),
 ) -> ApiResponse[ActivityDetailSchema]:
     """Получает вид деятельности по ID."""
-    repository: BaseActivityRepository = container.resolve(BaseActivityRepository)
-    activity = await repository.get_by_id(activity_id)
+    mediator: Mediator = container.resolve(Mediator)
+    query = GetActivityByIdQuery(activity_id=activity_id)
+    activity = await mediator.handle_query(query)
 
     if not activity:
         return ApiResponse[ActivityDetailSchema](
@@ -86,20 +90,16 @@ async def get_activities(
     container=Depends(init_container),
 ) -> ApiResponse[ListPaginatedResponse[ActivityResponseSchema]]:
     """Получает список видов деятельности с фильтрацией."""
-    repository: BaseActivityRepository = container.resolve(BaseActivityRepository)
-    filters_dict = {}
-    if name is not None:
-        filters_dict["name"] = name
-    if parent_id is not None:
-        filters_dict["parent_id"] = parent_id
-    activities = list(await repository.filter(**filters_dict))
+    mediator: Mediator = container.resolve(Mediator)
+    query = GetActivitiesQuery(
+        name=name,
+        parent_id=parent_id,
+        limit=pagination.limit,
+        offset=pagination.offset,
+    )
+    activities, total = await mediator.handle_query(query)
 
-    items = [
-        ActivityResponseSchema.from_entity(activity)
-        for activity in activities[
-            pagination.offset : pagination.offset + pagination.limit
-        ]
-    ]
+    items = [ActivityResponseSchema.from_entity(activity) for activity in activities]
 
     return ApiResponse[ListPaginatedResponse[ActivityResponseSchema]](
         data=ListPaginatedResponse[ActivityResponseSchema](
@@ -107,6 +107,7 @@ async def get_activities(
             pagination=PaginationOut(
                 limit=pagination.limit,
                 offset=pagination.offset,
+                total=total,
             ),
         ),
     )

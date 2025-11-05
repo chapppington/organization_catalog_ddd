@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from domain.base.exceptions import ApplicationException
 
@@ -90,7 +91,7 @@ class ActivityNestingLevelExceededException(OrganizationException):
 
 @dataclass(eq=False)
 class ActivityNotFoundException(OrganizationException):
-    activity_id: str
+    activity_id: UUID
 
     @property
     def message(self) -> str:

@@ -6,6 +6,7 @@ from typing import (
     Any,
     Iterable,
 )
+from uuid import UUID
 
 from domain.organization.entities import ActivityEntity
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
@@ -18,7 +19,7 @@ class DummyInMemoryActivityRepository(BaseActivityRepository):
     async def add(self, activity: ActivityEntity) -> None:
         self._saved_activities.append(activity)
 
-    async def get_by_id(self, activity_id: str) -> ActivityEntity | None:
+    async def get_by_id(self, activity_id: UUID) -> ActivityEntity | None:
         try:
             return next(
                 activity

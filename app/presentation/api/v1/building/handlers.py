@@ -8,7 +8,10 @@ from fastapi import (
 from application.commands.building import CreateBuildingCommand
 from application.init import init_container
 from application.mediator import Mediator
-from domain.organization.interfaces.repositories.building import BaseBuildingRepository
+from application.queries.building import (
+    GetBuildingByIdQuery,
+    GetBuildingsQuery,
+)
 from presentation.api.filters import (
     PaginationIn,
     PaginationOut,
@@ -61,8 +64,9 @@ async def get_building_by_id(
     container=Depends(init_container),
 ) -> ApiResponse[BuildingDetailSchema]:
     """Получает здание по ID."""
-    repository: BaseBuildingRepository = container.resolve(BaseBuildingRepository)
-    building = await repository.get_by_id(building_id)
+    mediator: Mediator = container.resolve(Mediator)
+    query = GetBuildingByIdQuery(building_id=building_id)
+    building = await mediator.handle_query(query)
 
     if not building:
         return ApiResponse[BuildingDetailSchema](
@@ -88,22 +92,17 @@ async def get_buildings(
     container=Depends(init_container),
 ) -> ApiResponse[ListPaginatedResponse[BuildingResponseSchema]]:
     """Получает список зданий с фильтрацией."""
-    repository: BaseBuildingRepository = container.resolve(BaseBuildingRepository)
-    filters_dict = {}
-    if address is not None:
-        filters_dict["address"] = address
-    if latitude is not None:
-        filters_dict["latitude"] = latitude
-    if longitude is not None:
-        filters_dict["longitude"] = longitude
-    buildings = list(await repository.filter(**filters_dict))
+    mediator: Mediator = container.resolve(Mediator)
+    query = GetBuildingsQuery(
+        address=address,
+        latitude=latitude,
+        longitude=longitude,
+        limit=pagination.limit,
+        offset=pagination.offset,
+    )
+    buildings, total = await mediator.handle_query(query)
 
-    items = [
-        BuildingResponseSchema.from_entity(building)
-        for building in buildings[
-            pagination.offset : pagination.offset + pagination.limit
-        ]
-    ]
+    items = [BuildingResponseSchema.from_entity(building) for building in buildings]
 
     return ApiResponse[ListPaginatedResponse[BuildingResponseSchema]](
         data=ListPaginatedResponse[BuildingResponseSchema](
@@ -111,6 +110,7 @@ async def get_buildings(
             pagination=PaginationOut(
                 limit=pagination.limit,
                 offset=pagination.offset,
+                total=total,
             ),
         ),
     )

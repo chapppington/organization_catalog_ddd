@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from application.exceptions.base import LogicException
 
@@ -6,7 +7,7 @@ from application.exceptions.base import LogicException
 @dataclass(eq=False)
 class ActivityWithThatNameAlreadyExistsException(LogicException):
     name: str
-    parent_id: str | None = None
+    parent_id: UUID | None = None
 
     @property
     def message(self):
@@ -17,7 +18,7 @@ class ActivityWithThatNameAlreadyExistsException(LogicException):
 
 @dataclass(eq=False)
 class ActivityNotFoundException(LogicException):
-    activity_oid: str
+    activity_oid: UUID
 
     @property
     def message(self):
@@ -26,7 +27,7 @@ class ActivityNotFoundException(LogicException):
 
 @dataclass(eq=False)
 class ActivityIdAlreadyExistsException(LogicException):
-    activity_id: str
+    activity_id: UUID
 
     @property
     def message(self):
@@ -35,7 +36,7 @@ class ActivityIdAlreadyExistsException(LogicException):
 
 @dataclass(eq=False)
 class ParentActivityNotFoundException(LogicException):
-    parent_id: str
+    parent_id: UUID
 
     @property
     def message(self):
