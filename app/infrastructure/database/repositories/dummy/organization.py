@@ -66,7 +66,3 @@ class DummyInMemoryOrganizationRepository(BaseOrganizationRepository):
             ]
 
         return results
-
-    async def count(self, **filters: Any) -> int:
-        results = list(await self.filter(**filters))
-        return len(results)

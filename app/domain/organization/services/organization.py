@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Iterable
+from typing import (
+    Iterable,
+    Tuple,
+)
 
 from domain.organization.entities import OrganizationEntity
 from domain.organization.exceptions import (
@@ -84,24 +87,25 @@ class OrganizationService:
         name: str,
         limit: int,
         offset: int,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         """Поиск организации по названию."""
         organizations = list(await self.organization_repository.filter(name=name))
-        return organizations[offset : offset + limit]
+        total = len(organizations)
+        return organizations[offset : offset + limit], total
 
     async def get_organizations_by_address(
         self,
         address: str,
         limit: int,
         offset: int,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         """Список всех организаций находящихся по указанному адресу."""
         # Ищем здания по частичному совпадению адреса
         buildings = await self.building_repository.filter(address=address)
         buildings_list = list(buildings)
 
         if not buildings_list:
-            return []
+            return [], 0
 
         # Собираем организации из всех найденных зданий
         all_organizations = []
@@ -112,14 +116,15 @@ class OrganizationService:
             all_organizations.extend(organizations)
 
         organizations_list = list(all_organizations)
-        return organizations_list[offset : offset + limit]
+        total = len(organizations_list)
+        return organizations_list[offset : offset + limit], total
 
     async def get_organizations_by_activity(
         self,
-        activity_id: str,
+        activity_name: str,
         limit: int,
         offset: int,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         """Поиск организаций по виду деятельности (включая вложенные)
 
         Например, поиск по "Еда" найдет организации с видами деятельности:
@@ -128,12 +133,14 @@ class OrganizationService:
         - Молочная продукция
 
         """
-        root_activity = await self.activity_repository.get_by_id(activity_id)
+        root_activity = await self.activity_repository.get_by_name(name=activity_name)
         if not root_activity:
-            return []
+            return [], 0
 
         # Получаем всех детей из дерева деятельности
-        child_activities = await self.activity_repository.filter(parent_id=activity_id)
+        child_activities = await self.activity_repository.filter(
+            parent_id=root_activity.oid,
+        )
 
         # Собираем все названия деятельностей (корень + дети)
         activity_names = [root_activity.name.as_generic_type()]
@@ -151,8 +158,9 @@ class OrganizationService:
 
         # Убираем дубликаты через set (используется __hash__ по oid)
         unique_organizations = list(set(all_organizations))
+        total = len(unique_organizations)
 
-        return unique_organizations[offset : offset + limit]
+        return unique_organizations[offset : offset + limit], total
 
     async def get_organizations_by_radius(
         self,
@@ -161,7 +169,7 @@ class OrganizationService:
         radius: float,
         limit: int,
         offset: int,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         """Список организаций в заданном радиусе относительно точки на
         карте."""
         buildings = await self.building_repository.filter(
@@ -178,7 +186,11 @@ class OrganizationService:
             )
             all_organizations.extend(organizations)
 
-        return all_organizations[offset : offset + limit]
+        # Убираем дубликаты через set (используется __hash__ по oid)
+        unique_organizations = list(set(all_organizations))
+        total = len(unique_organizations)
+
+        return unique_organizations[offset : offset + limit], total
 
     async def get_organizations_by_rectangle(
         self,
@@ -188,7 +200,7 @@ class OrganizationService:
         lon_max: float,
         limit: int,
         offset: int,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         """Список организаций в прямоугольной области."""
 
         buildings = await self.building_repository.filter(
@@ -206,4 +218,8 @@ class OrganizationService:
             )
             all_organizations.extend(organizations)
 
-        return all_organizations[offset : offset + limit]
+        # Убираем дубликаты через set (используется __hash__ по oid)
+        unique_organizations = list(set(all_organizations))
+        total = len(unique_organizations)
+
+        return unique_organizations[offset : offset + limit], total

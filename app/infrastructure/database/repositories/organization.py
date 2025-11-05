@@ -5,7 +5,6 @@ from typing import (
 from uuid import UUID
 
 from sqlalchemy import (
-    func,
     insert,
     select,
 )
@@ -86,6 +85,9 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
                         stmt = stmt.join(OrganizationModel.activities)
                         activity_joined = True
                     stmt = stmt.where(ActivityModel.name == value)
+                elif field == "name":
+                    # Частичный поиск по имени организации
+                    stmt = stmt.where(OrganizationModel.name.ilike(f"%{value}%"))
                 else:
                     # Обычные поля модели
                     try:
@@ -102,28 +104,3 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             res = await session.execute(stmt)
             results = [organization_model_to_entity(row[0]) for row in res.all()]
             return results
-
-    async def count(self, **filters: Any) -> int:
-        """Подсчет организаций с учетом фильтров."""
-        async with async_session_factory() as session:
-            stmt = select(func.count(OrganizationModel.oid.distinct()))
-
-            activity_joined = False
-            for field, value in filters.items():
-                if field == "activity_name":
-                    # Фильтр по названию активности через JOIN через association table
-                    if not activity_joined:
-                        stmt = stmt.join(OrganizationModel.activities)
-                        activity_joined = True
-                    stmt = stmt.where(ActivityModel.name == value)
-                else:
-                    # Обычные поля модели
-                    try:
-                        field_obj = getattr(OrganizationModel, field)
-                        stmt = stmt.where(field_obj == value)
-                    except AttributeError:
-                        # Игнорируем неизвестные поля
-                        continue
-
-            res = await session.execute(stmt)
-            return res.scalar_one()

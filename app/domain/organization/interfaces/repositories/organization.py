@@ -22,6 +22,3 @@ class BaseOrganizationRepository(ABC):
 
     @abstractmethod
     async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]: ...
-
-    @abstractmethod
-    async def count(self, **filters: Any) -> int: ...

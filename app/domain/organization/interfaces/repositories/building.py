@@ -25,6 +25,3 @@ class BaseBuildingRepository(ABC):
 
     @abstractmethod
     async def filter(self, **filters: Any) -> Iterable[BuildingEntity]: ...
-
-    @abstractmethod
-    async def count(self, **filters: Any) -> int: ...

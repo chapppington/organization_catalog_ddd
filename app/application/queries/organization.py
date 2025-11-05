@@ -1,5 +1,8 @@
 from dataclasses import dataclass
-from typing import Iterable
+from typing import (
+    Iterable,
+    Tuple,
+)
 
 from application.queries.base import (
     BaseQuery,
@@ -23,7 +26,7 @@ class GetOrganizationsByAddressQuery(BaseQuery):
 
 @dataclass(frozen=True)
 class GetOrganizationsByActivityQuery(BaseQuery):
-    activity_id: str
+    activity_name: str
     limit: int
     offset: int
 
@@ -71,14 +74,17 @@ class GetOrganizationByIdQueryHandler(
 
 @dataclass(frozen=True)
 class GetOrganizationsByAddressQueryHandler(
-    BaseQueryHandler[GetOrganizationsByAddressQuery, Iterable[OrganizationEntity]],
+    BaseQueryHandler[
+        GetOrganizationsByAddressQuery,
+        Tuple[Iterable[OrganizationEntity], int],
+    ],
 ):
     organization_service: OrganizationService
 
     async def handle(
         self,
         query: GetOrganizationsByAddressQuery,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_address(
             address=query.address,
             limit=query.limit,
@@ -88,16 +94,19 @@ class GetOrganizationsByAddressQueryHandler(
 
 @dataclass(frozen=True)
 class GetOrganizationsByActivityQueryHandler(
-    BaseQueryHandler[GetOrganizationsByActivityQuery, Iterable[OrganizationEntity]],
+    BaseQueryHandler[
+        GetOrganizationsByActivityQuery,
+        Tuple[Iterable[OrganizationEntity], int],
+    ],
 ):
     organization_service: OrganizationService
 
     async def handle(
         self,
         query: GetOrganizationsByActivityQuery,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_activity(
-            activity_id=query.activity_id,
+            activity_name=query.activity_name,
             limit=query.limit,
             offset=query.offset,
         )
@@ -105,14 +114,17 @@ class GetOrganizationsByActivityQueryHandler(
 
 @dataclass(frozen=True)
 class GetOrganizationsByNameQueryHandler(
-    BaseQueryHandler[GetOrganizationsByNameQuery, Iterable[OrganizationEntity]],
+    BaseQueryHandler[
+        GetOrganizationsByNameQuery,
+        Tuple[Iterable[OrganizationEntity], int],
+    ],
 ):
     organization_service: OrganizationService
 
     async def handle(
         self,
         query: GetOrganizationsByNameQuery,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_name(
             name=query.name,
             limit=query.limit,
@@ -122,14 +134,17 @@ class GetOrganizationsByNameQueryHandler(
 
 @dataclass(frozen=True)
 class GetOrganizationsByRadiusQueryHandler(
-    BaseQueryHandler[GetOrganizationsByRadiusQuery, Iterable[OrganizationEntity]],
+    BaseQueryHandler[
+        GetOrganizationsByRadiusQuery,
+        Tuple[Iterable[OrganizationEntity], int],
+    ],
 ):
     organization_service: OrganizationService
 
     async def handle(
         self,
         query: GetOrganizationsByRadiusQuery,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_radius(
             latitude=query.latitude,
             longitude=query.longitude,
@@ -141,14 +156,17 @@ class GetOrganizationsByRadiusQueryHandler(
 
 @dataclass(frozen=True)
 class GetOrganizationsByRectangleQueryHandler(
-    BaseQueryHandler[GetOrganizationsByRectangleQuery, Iterable[OrganizationEntity]],
+    BaseQueryHandler[
+        GetOrganizationsByRectangleQuery,
+        Tuple[Iterable[OrganizationEntity], int],
+    ],
 ):
     organization_service: OrganizationService
 
     async def handle(
         self,
         query: GetOrganizationsByRectangleQuery,
-    ) -> Iterable[OrganizationEntity]:
+    ) -> Tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_rectangle(
             lat_min=query.lat_min,
             lat_max=query.lat_max,

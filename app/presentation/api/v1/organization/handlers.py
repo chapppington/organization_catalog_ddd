@@ -27,7 +27,6 @@ from presentation.api.schemas import (
 from presentation.api.v1.organization.schemas import (
     CreateOrganizationRequestSchema,
     OrganizationDetailSchema,
-    OrganizationResponseSchema,
 )
 
 
@@ -37,12 +36,12 @@ router = APIRouter(prefix="/organizations", tags=["organizations"])
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_model=ApiResponse[OrganizationResponseSchema],
+    response_model=ApiResponse[OrganizationDetailSchema],
 )
 async def create_organization(
     request: CreateOrganizationRequestSchema,
     container=Depends(init_container),
-) -> ApiResponse[OrganizationResponseSchema]:
+) -> ApiResponse[OrganizationDetailSchema]:
     """Создает новую организацию."""
     mediator: Mediator = container.resolve(Mediator)
     command = CreateOrganizationCommand(
@@ -54,21 +53,21 @@ async def create_organization(
     results = await mediator.handle_command(command)
     organization = results[0]
 
-    return ApiResponse[OrganizationResponseSchema](
-        data=OrganizationResponseSchema.from_entity(organization),
+    return ApiResponse[OrganizationDetailSchema](
+        data=OrganizationDetailSchema.from_entity(organization),
     )
 
 
 @router.get(
     "",
     status_code=status.HTTP_200_OK,
-    response_model=ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]],
+    response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
 )
 async def get_organizations_by_name(
     name: str = Query(..., description="Название организации"),
     pagination: PaginationIn = Depends(),
     container=Depends(init_container),
-) -> ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]]:
+) -> ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]]:
     """Поиск организаций по названию."""
     mediator: Mediator = container.resolve(Mediator)
     query = GetOrganizationsByNameQuery(
@@ -76,14 +75,18 @@ async def get_organizations_by_name(
         limit=pagination.limit,
         offset=pagination.offset,
     )
-    organizations = await mediator.handle_query(query)
+    organizations, total = await mediator.handle_query(query)
 
-    items = [OrganizationResponseSchema.from_entity(org) for org in organizations]
+    items = [OrganizationDetailSchema.from_entity(org) for org in organizations]
 
-    return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
-        data=ListPaginatedResponse[OrganizationResponseSchema](
+    return ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]](
+        data=ListPaginatedResponse[OrganizationDetailSchema](
             items=items,
-            pagination=PaginationOut(limit=pagination.limit, offset=pagination.offset),
+            pagination=PaginationOut(
+                limit=pagination.limit,
+                offset=pagination.offset,
+                total=total,
+            ),
         ),
     )
 
@@ -91,13 +94,13 @@ async def get_organizations_by_name(
 @router.get(
     "/by-address",
     status_code=status.HTTP_200_OK,
-    response_model=ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]],
+    response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
 )
 async def get_organizations_by_address(
     address: str = Query(..., description="Адрес здания"),
     pagination: PaginationIn = Depends(),
     container=Depends(init_container),
-) -> ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]]:
+) -> ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]]:
     """Список организаций по адресу."""
     mediator: Mediator = container.resolve(Mediator)
     query = GetOrganizationsByAddressQuery(
@@ -105,27 +108,18 @@ async def get_organizations_by_address(
         limit=pagination.limit,
         offset=pagination.offset,
     )
-    organizations = await mediator.handle_query(query)
+    organizations, total = await mediator.handle_query(query)
     organizations_list = list(organizations)
 
-    if not organizations_list:
-        return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
-            data=ListPaginatedResponse[OrganizationResponseSchema](
-                items=[],
-                pagination=PaginationOut(
-                    limit=pagination.limit,
-                    offset=pagination.offset,
-                ),
-            ),
-        )
-    items = [OrganizationResponseSchema.from_entity(org) for org in organizations_list]
+    items = [OrganizationDetailSchema.from_entity(org) for org in organizations_list]
 
-    return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
-        data=ListPaginatedResponse[OrganizationResponseSchema](
+    return ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]](
+        data=ListPaginatedResponse[OrganizationDetailSchema](
             items=items,
             pagination=PaginationOut(
                 limit=pagination.limit,
                 offset=pagination.offset,
+                total=total,
             ),
         ),
     )
@@ -134,30 +128,31 @@ async def get_organizations_by_address(
 @router.get(
     "/by-activity",
     status_code=status.HTTP_200_OK,
-    response_model=ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]],
+    response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
 )
 async def get_organizations_by_activity(
-    activity_id: str = Query(..., description="ID вида деятельности"),
+    activity_name: str = Query(..., description="Название вида деятельности"),
     pagination: PaginationIn = Depends(),
     container=Depends(init_container),
-) -> ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]]:
+) -> ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]]:
     """Поиск организаций по виду деятельности."""
     mediator: Mediator = container.resolve(Mediator)
     query = GetOrganizationsByActivityQuery(
-        activity_id=activity_id,
+        activity_name=activity_name,
         limit=pagination.limit,
         offset=pagination.offset,
     )
-    organizations = await mediator.handle_query(query)
+    organizations, total = await mediator.handle_query(query)
 
-    items = [OrganizationResponseSchema.from_entity(org) for org in organizations]
+    items = [OrganizationDetailSchema.from_entity(org) for org in organizations]
 
-    return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
-        data=ListPaginatedResponse[OrganizationResponseSchema](
+    return ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]](
+        data=ListPaginatedResponse[OrganizationDetailSchema](
             items=items,
             pagination=PaginationOut(
                 limit=pagination.limit,
                 offset=pagination.offset,
+                total=total,
             ),
         ),
     )
@@ -166,7 +161,7 @@ async def get_organizations_by_activity(
 @router.get(
     "/by-radius",
     status_code=status.HTTP_200_OK,
-    response_model=ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]],
+    response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
 )
 async def get_organizations_by_radius(
     latitude: float = Query(..., description="Широта центральной точки"),
@@ -174,7 +169,7 @@ async def get_organizations_by_radius(
     radius: float = Query(..., description="Радиус поиска в метрах"),
     pagination: PaginationIn = Depends(),
     container=Depends(init_container),
-) -> ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]]:
+) -> ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]]:
     """Поиск организаций в заданном радиусе."""
     mediator: Mediator = container.resolve(Mediator)
     query = GetOrganizationsByRadiusQuery(
@@ -184,16 +179,17 @@ async def get_organizations_by_radius(
         limit=pagination.limit,
         offset=pagination.offset,
     )
-    organizations = await mediator.handle_query(query)
+    organizations, total = await mediator.handle_query(query)
 
-    items = [OrganizationResponseSchema.from_entity(org) for org in organizations]
+    items = [OrganizationDetailSchema.from_entity(org) for org in organizations]
 
-    return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
-        data=ListPaginatedResponse[OrganizationResponseSchema](
+    return ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]](
+        data=ListPaginatedResponse[OrganizationDetailSchema](
             items=items,
             pagination=PaginationOut(
                 limit=pagination.limit,
                 offset=pagination.offset,
+                total=total,
             ),
         ),
     )
@@ -202,7 +198,7 @@ async def get_organizations_by_radius(
 @router.get(
     "/by-rectangle",
     status_code=status.HTTP_200_OK,
-    response_model=ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]],
+    response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
 )
 async def get_organizations_by_rectangle(
     lat_min: float = Query(..., description="Минимальная широта"),
@@ -211,7 +207,7 @@ async def get_organizations_by_rectangle(
     lon_max: float = Query(..., description="Максимальная долгота"),
     pagination: PaginationIn = Depends(),
     container=Depends(init_container),
-) -> ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]]:
+) -> ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]]:
     """Поиск организаций в прямоугольной области."""
     mediator: Mediator = container.resolve(Mediator)
     query = GetOrganizationsByRectangleQuery(
@@ -222,16 +218,17 @@ async def get_organizations_by_rectangle(
         limit=pagination.limit,
         offset=pagination.offset,
     )
-    organizations = await mediator.handle_query(query)
+    organizations, total = await mediator.handle_query(query)
 
-    items = [OrganizationResponseSchema.from_entity(org) for org in organizations]
+    items = [OrganizationDetailSchema.from_entity(org) for org in organizations]
 
-    return ApiResponse[ListPaginatedResponse[OrganizationResponseSchema]](
-        data=ListPaginatedResponse[OrganizationResponseSchema](
+    return ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]](
+        data=ListPaginatedResponse[OrganizationDetailSchema](
             items=items,
             pagination=PaginationOut(
                 limit=pagination.limit,
                 offset=pagination.offset,
+                total=total,
             ),
         ),
     )

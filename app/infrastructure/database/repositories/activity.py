@@ -4,10 +4,8 @@ from typing import (
 )
 from uuid import UUID
 
-from sqlalchemy import (
-    func,
-    select,
-)
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from domain.organization.entities import ActivityEntity
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
@@ -29,9 +27,12 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
 
     async def get_by_id(self, activity_id: UUID) -> ActivityEntity | None:
         """Получить активность по ID."""
-
         async with async_session_factory() as session:
-            stmt = select(ActivityModel).where(ActivityModel.oid == activity_id)
+            stmt = (
+                select(ActivityModel)
+                .where(ActivityModel.oid == activity_id)
+                .options(selectinload(ActivityModel.parent))
+            )
             res = await session.execute(stmt)
             result = res.scalar_one_or_none()
 
@@ -40,7 +41,11 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
     async def get_by_name(self, name: str) -> ActivityEntity | None:
         """Получить активность по имени."""
         async with async_session_factory() as session:
-            stmt = select(ActivityModel).where(ActivityModel.name == name)
+            stmt = (
+                select(ActivityModel)
+                .where(ActivityModel.name == name)
+                .options(selectinload(ActivityModel.parent))
+            )
             res = await session.execute(stmt)
             result = res.scalar_one_or_none()
 
@@ -49,7 +54,7 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
     async def filter(self, **filters: Any) -> Iterable[ActivityEntity]:
         """Фильтрация активностей."""
         async with async_session_factory() as session:
-            stmt = select(ActivityModel)
+            stmt = select(ActivityModel).options(selectinload(ActivityModel.parent))
 
             for field, value in filters.items():
                 field_obj = getattr(ActivityModel, field)
@@ -59,15 +64,3 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
             results = [activity_model_to_entity(row[0]) for row in res.all()]
 
             return results
-
-    async def count(self, **filters: Any) -> int:
-        """Подсчет активностей."""
-        async with async_session_factory() as session:
-            stmt = select(func.count(ActivityModel.oid))
-
-            for field, value in filters.items():
-                field_obj = getattr(ActivityModel, field)
-                stmt = stmt.where(field_obj == value)
-
-            res = await session.execute(stmt)
-            return res.scalar_one()

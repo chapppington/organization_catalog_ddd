@@ -7,6 +7,7 @@ from pydantic import (
 class PaginationOut(BaseModel):
     limit: int
     offset: int
+    total: int
 
 
 class PaginationIn(BaseModel):

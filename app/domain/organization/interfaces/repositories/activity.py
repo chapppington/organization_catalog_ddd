@@ -25,6 +25,3 @@ class BaseActivityRepository(ABC):
 
     @abstractmethod
     async def filter(self, **filters: Any) -> Iterable[ActivityEntity]: ...
-
-    @abstractmethod
-    async def count(self, **filters: Any) -> int: ...

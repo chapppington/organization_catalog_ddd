@@ -101,12 +101,13 @@ async def test_search_organizations_by_name_query(mediator: Mediator):
     )
 
     # Ищем по названию "Рога"
-    results = await mediator.handle_query(
+    results, total = await mediator.handle_query(
         GetOrganizationsByNameQuery(name="Рога", limit=10, offset=0),
     )
 
     results_list = list(results)
     assert len(results_list) == 2
+    assert total == 2
     names = [org.name.as_generic_type() for org in results_list]
     assert "ООО Рога и Копыта" in names
     assert "ООО Рога Плюс" in names
@@ -161,7 +162,7 @@ async def test_get_organizations_by_address_query(mediator: Mediator):
     )
 
     # Ищем по полному адресу
-    results = await mediator.handle_query(
+    results, total = await mediator.handle_query(
         GetOrganizationsByAddressQuery(
             address="г. Москва, ул. Ленина 1",
             limit=10,
@@ -179,6 +180,7 @@ async def test_get_organizations_by_address_query(mediator: Mediator):
         print(f"   Деятельности: {[a.name.as_generic_type() for a in org.activities]}")
     print()
     assert len(results_list) == 2
+    assert total == 2
     names = [org.name.as_generic_type() for org in results_list]
     assert "ООО Ленина 1" in names
     assert "ООО Ленина 2" in names
@@ -237,12 +239,13 @@ async def test_get_organizations_by_activity_query(mediator: Mediator):
     )
 
     # Ищем по корневой деятельности "Еда" - должны найтись все 3
-    results = await mediator.handle_query(
-        GetOrganizationsByActivityQuery(activity_id=food.oid, limit=10, offset=0),
+    results, total = await mediator.handle_query(
+        GetOrganizationsByActivityQuery(activity_name="Еда", limit=10, offset=0),
     )
 
     results_list = list(results)
     assert len(results_list) == 3
+    assert total == 3
     names = [org.name.as_generic_type() for org in results_list]
     assert "ООО Еда общая" in names
     assert "ООО Мясной цех" in names
@@ -290,7 +293,7 @@ async def test_get_organizations_by_radius_query(mediator: Mediator):
     )
 
     # Ищем в радиусе 1км от Кремля
-    results = await mediator.handle_query(
+    results, total = await mediator.handle_query(
         GetOrganizationsByRadiusQuery(
             latitude=55.7558,
             longitude=37.6173,
@@ -303,6 +306,7 @@ async def test_get_organizations_by_radius_query(mediator: Mediator):
     results_list = list(results)
     # В радиусе 1км должна быть только организация в Кремле
     assert len(results_list) == 1
+    assert total == 1
     assert results_list[0].name.as_generic_type() == "ООО В центре"
 
 
@@ -362,7 +366,7 @@ async def test_get_organizations_by_rectangle_query(mediator: Mediator):
     )
 
     # Ищем в прямоугольнике (должны найтись только точки 1 и 2)
-    results = await mediator.handle_query(
+    results, total = await mediator.handle_query(
         GetOrganizationsByRectangleQuery(
             lat_min=55.7400,
             lat_max=55.7700,
@@ -375,6 +379,7 @@ async def test_get_organizations_by_rectangle_query(mediator: Mediator):
 
     results_list = list(results)
     assert len(results_list) == 2
+    assert total == 2
     names = [org.name.as_generic_type() for org in results_list]
     assert "ООО Точка 1" in names
     assert "ООО Точка 2" in names
@@ -407,19 +412,22 @@ async def test_search_organizations_pagination(mediator: Mediator):
         )
 
     # Тест пагинации: берем первые 2
-    results_page1 = await mediator.handle_query(
+    results_page1, total1 = await mediator.handle_query(
         GetOrganizationsByNameQuery(name="Тест", limit=2, offset=0),
     )
     assert len(list(results_page1)) == 2
+    assert total1 == 5
 
     # Берем следующие 2
-    results_page2 = await mediator.handle_query(
+    results_page2, total2 = await mediator.handle_query(
         GetOrganizationsByNameQuery(name="Тест", limit=2, offset=2),
     )
     assert len(list(results_page2)) == 2
+    assert total2 == 5
 
     # Берем последний
-    results_page3 = await mediator.handle_query(
+    results_page3, total3 = await mediator.handle_query(
         GetOrganizationsByNameQuery(name="Тест", limit=2, offset=4),
     )
     assert len(list(results_page3)) == 1
+    assert total3 == 5
