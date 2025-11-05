@@ -12,6 +12,7 @@ from application.exceptions.organization import OrganizationNotFoundException
 from domain.organization.exceptions import (
     ActivityNotFoundException as DomainActivityNotFoundException,
     BuildingNotFoundException as DomainBuildingNotFoundException,
+    OrganizationException,
 )
 from presentation.api.schemas import ApiResponse
 
@@ -72,10 +73,27 @@ async def organization_not_found_handler(
     )
 
 
+async def organization_exception_handler(
+    request: Request,
+    exc: OrganizationException,
+) -> JSONResponse:
+    """Обработчик для доменных исключений организации."""
+    return JSONResponse(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        content=ApiResponse(
+            data={},
+            errors=[{"message": exc.message}],
+        ).model_dump(),
+    )
+
+
 def setup_exception_handlers(app: FastAPI) -> None:
     """Настраивает обработчики исключений для FastAPI приложения."""
     # Регистрируем обработчик для логических исключений приложения
     app.add_exception_handler(LogicException, logic_exception_handler)
+
+    # Обработчик для доменных исключений организации (возвращают 400)
+    app.add_exception_handler(OrganizationException, organization_exception_handler)
 
     # Специфичные обработчики для NotFound исключений (возвращают 404)
     app.add_exception_handler(ActivityNotFoundException, activity_not_found_handler)

@@ -42,6 +42,19 @@ class EmptyBuildingAddressException(OrganizationException):
 
 
 @dataclass(eq=False)
+class BuildingAddressTooLongException(OrganizationException):
+    address_length: int
+    max_length: int
+
+    @property
+    def message(self) -> str:
+        return (
+            f"Building address is too long. Current length is {self.address_length}, "
+            f"maximum allowed length is {self.max_length}"
+        )
+
+
+@dataclass(eq=False)
 class InvalidBuildingLatitudeException(OrganizationException):
     latitude: float
 
@@ -74,6 +87,19 @@ class EmptyActivityNameException(OrganizationException):
     @property
     def message(self) -> str:
         return "Activity name is empty"
+
+
+@dataclass(eq=False)
+class ActivityNameTooLongException(OrganizationException):
+    name_length: int
+    max_length: int
+
+    @property
+    def message(self) -> str:
+        return (
+            f"Activity name is too long. Current length is {self.name_length}, "
+            f"maximum allowed length is {self.max_length}"
+        )
 
 
 @dataclass(eq=False)

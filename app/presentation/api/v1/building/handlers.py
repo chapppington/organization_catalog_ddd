@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -60,7 +62,7 @@ async def create_building(
     response_model=ApiResponse[BuildingDetailSchema],
 )
 async def get_building_by_id(
-    building_id: str,
+    building_id: UUID,
     container=Depends(init_container),
 ) -> ApiResponse[BuildingDetailSchema]:
     """Получает здание по ID."""

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -59,7 +61,7 @@ async def create_activity(
     response_model=ApiResponse[ActivityDetailSchema],
 )
 async def get_activity_by_id(
-    activity_id: str,
+    activity_id: UUID,
     container=Depends(init_container),
 ) -> ApiResponse[ActivityDetailSchema]:
     """Получает вид деятельности по ID."""
@@ -85,7 +87,7 @@ async def get_activity_by_id(
 )
 async def get_activities(
     name: str | None = Query(None, description="Название вида деятельности"),
-    parent_id: str | None = Query(None, description="ID родительской деятельности"),
+    parent_id: UUID | None = Query(None, description="ID родительской деятельности"),
     pagination: PaginationIn = Depends(),
     container=Depends(init_container),
 ) -> ApiResponse[ListPaginatedResponse[ActivityResponseSchema]]:

@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -240,7 +242,7 @@ async def get_organizations_by_rectangle(
     response_model=ApiResponse[OrganizationDetailSchema],
 )
 async def get_organization_by_id(
-    organization_id: str,
+    organization_id: UUID,
     container=Depends(init_container),
 ) -> ApiResponse[OrganizationDetailSchema]:
     """Получает организацию по ID."""

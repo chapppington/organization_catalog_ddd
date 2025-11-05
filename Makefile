@@ -58,3 +58,7 @@ migrations:
 .PHONY: migrate
 migrate:
 	${EXEC} ${APP_CONTAINER} alembic upgrade head
+
+.PHONY: test 
+test:
+	${EXEC} ${APP_CONTAINER} pytest
