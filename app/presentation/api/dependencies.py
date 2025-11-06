@@ -23,7 +23,7 @@ security = HTTPBearer(
 )
 
 
-async def get_api_key_from_header(
+async def api_key_required(
     authorization: HTTPAuthorizationCredentials = Depends(security),
     container=Depends(init_container),
 ) -> APIKeyEntity:

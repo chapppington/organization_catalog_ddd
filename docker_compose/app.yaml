@@ -18,7 +18,12 @@ services:
       - ../alembic.ini:/app/alembic.ini
     networks:
       - backend
+      - elk-network
 
 networks:
   backend:
     driver: bridge
+  elk-network:
+    name: elk-network
+    driver: bridge
+    attachable: true

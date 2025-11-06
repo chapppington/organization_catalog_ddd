@@ -6,6 +6,7 @@ ENV = --env-file .env
 EXEC = docker exec -it
 APP_FILE = docker_compose/app.yaml
 APP_CONTAINER = main-app
+MONITORING_FILE = docker_compose/monitoring.yaml
 
 .PHONY: all
 all:
@@ -62,3 +63,31 @@ migrate:
 .PHONY: test 
 test:
 	${EXEC} ${APP_CONTAINER} pytest
+
+.PHONY: monitoring
+monitoring:
+	${DC} -f ${MONITORING_FILE} up -d
+
+.PHONY: monitoring-down
+monitoring-down:
+	${DC} -f ${MONITORING_FILE} down
+
+.PHONY: monitoring-logs
+monitoring-logs:
+	${DC} -f ${MONITORING_FILE} logs -f
+
+.PHONY: elasticsearch-logs
+elasticsearch-logs:
+	${LOGS} elasticsearch -f
+
+.PHONY: logstash-logs
+logstash-logs:
+	${LOGS} logstash -f
+
+.PHONY: kibana-logs
+kibana-logs:
+	${LOGS} kibana -f
+
+.PHONY: monitoring-restart
+monitoring-restart:
+	${DC} -f ${MONITORING_FILE} restart

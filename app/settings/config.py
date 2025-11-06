@@ -43,6 +43,21 @@ class Config(BaseSettings):
         alias="JWT_SECRET_KEY",
     )
 
+    logstash_host: str = Field(
+        default="logstash",
+        alias="LOGSTASH_HOST",
+    )
+
+    logstash_port: int = Field(
+        default=5000,
+        alias="LOGSTASH_PORT",
+    )
+
+    logstash_project: str = Field(
+        default="organization-catalog",
+        alias="LOGSTASH_PROJECT",
+    )
+
     @computed_field
     @property
     def postgres_connection_uri(self) -> str:
