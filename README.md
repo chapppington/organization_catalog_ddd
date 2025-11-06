@@ -363,12 +363,23 @@ LOGSTASH_PROJECT=organization-catalog  # Имя проекта для индек
 make monitoring
 ```
 
-2. Проверьте статус:
+2. Настройте Elasticsearch для single-node кластера (чтобы healthcheck прошел успешно):
+```bash
+curl -X PUT "localhost:9200/api-logs/_settings" -H 'Content-Type: application/json' -d'{
+  "index": {
+    "number_of_replicas": 0
+  }
+}'
+```
+
+Эта команда устанавливает количество реплик в 0, что необходимо для single-node кластера, чтобы статус Elasticsearch стал зеленым.
+
+3. Проверьте статус:
 ```bash
 make monitoring-logs
 ```
 
-3. Доступ к сервисам:
+4. Доступ к сервисам:
 - **Elasticsearch**: http://localhost:9200
 - **Kibana**: http://localhost:5601
 - **Logstash**: localhost:5000 (TCP)
