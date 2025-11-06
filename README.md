@@ -1,5 +1,7 @@
 # Organization Catalog DDD
 
+![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen)
+
 REST API приложение для справочника организаций, зданий и видов деятельности, построенное на принципах Domain-Driven Design.
 
 ## 📋 Описание
