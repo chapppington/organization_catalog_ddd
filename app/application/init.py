@@ -70,14 +70,18 @@ from domain.organization.services import (
     BuildingService,
     OrganizationService,
 )
+from domain.user.interfaces.repositories.api_key import BaseAPIKeyRepository
+from domain.user.interfaces.repositories.user import BaseUserRepository
 from domain.user.services import (
     APIKeyService,
     UserService,
 )
-from infrastructure.database.repositories.activity import SQLAlchemyActivityRepository
-from infrastructure.database.repositories.building import SQLAlchemyBuildingRepository
-from infrastructure.database.repositories.organization import (
+from infrastructure.database.repositories import (
+    SQLAlchemyActivityRepository,
+    SQLAlchemyAPIKeyRepository,
+    SQLAlchemyBuildingRepository,
     SQLAlchemyOrganizationRepository,
+    SQLAlchemyUserRepository,
 )
 from settings.config import Config
 
@@ -107,6 +111,16 @@ def _init_container() -> Container:
     container.register(
         BaseOrganizationRepository,
         instance=SQLAlchemyOrganizationRepository(),
+        scope=Scope.singleton,
+    )
+    container.register(
+        BaseUserRepository,
+        instance=SQLAlchemyUserRepository(),
+        scope=Scope.singleton,
+    )
+    container.register(
+        BaseAPIKeyRepository,
+        instance=SQLAlchemyAPIKeyRepository(),
         scope=Scope.singleton,
     )
 

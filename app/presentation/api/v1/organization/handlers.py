@@ -24,6 +24,7 @@ from presentation.api.filters import (
 )
 from presentation.api.schemas import (
     ApiResponse,
+    ErrorSchema,
     ListPaginatedResponse,
 )
 from presentation.api.v1.organization.schemas import (
@@ -39,6 +40,12 @@ router = APIRouter(prefix="/organizations", tags=["organizations"])
     "",
     status_code=status.HTTP_201_CREATED,
     response_model=ApiResponse[OrganizationDetailSchema],
+    responses={
+        status.HTTP_201_CREATED: {"model": ApiResponse[OrganizationDetailSchema]},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ErrorSchema},
+    },
 )
 async def create_organization(
     request: CreateOrganizationRequestSchema,
@@ -64,6 +71,13 @@ async def create_organization(
     "",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+    responses={
+        status.HTTP_200_OK: {
+            "model": ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+        },
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def get_organizations_by_name(
     name: str = Query(..., description="Название организации"),
@@ -97,6 +111,13 @@ async def get_organizations_by_name(
     "/by-address",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+    responses={
+        status.HTTP_200_OK: {
+            "model": ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+        },
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def get_organizations_by_address(
     address: str = Query(..., description="Адрес здания"),
@@ -131,6 +152,13 @@ async def get_organizations_by_address(
     "/by-activity",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+    responses={
+        status.HTTP_200_OK: {
+            "model": ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+        },
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def get_organizations_by_activity(
     activity_name: str = Query(..., description="Название вида деятельности"),
@@ -164,6 +192,13 @@ async def get_organizations_by_activity(
     "/by-radius",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+    responses={
+        status.HTTP_200_OK: {
+            "model": ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+        },
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def get_organizations_by_radius(
     latitude: float = Query(..., description="Широта центральной точки"),
@@ -201,6 +236,13 @@ async def get_organizations_by_radius(
     "/by-rectangle",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+    responses={
+        status.HTTP_200_OK: {
+            "model": ApiResponse[ListPaginatedResponse[OrganizationDetailSchema]],
+        },
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def get_organizations_by_rectangle(
     lat_min: float = Query(..., description="Минимальная широта"),
@@ -240,6 +282,12 @@ async def get_organizations_by_rectangle(
     "/{organization_id}",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[OrganizationDetailSchema],
+    responses={
+        status.HTTP_200_OK: {"model": ApiResponse[OrganizationDetailSchema]},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorSchema},
+    },
 )
 async def get_organization_by_id(
     organization_id: UUID,

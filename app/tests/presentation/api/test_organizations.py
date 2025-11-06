@@ -16,6 +16,7 @@ async def test_create_organization_success(
     app: FastAPI,
     client: TestClient,
     faker: Faker,
+    api_key_headers: dict[str, str],
 ):
     # Создаем здание
     building_url = app.url_path_for("create_building")
@@ -29,6 +30,7 @@ async def test_create_organization_success(
             "latitude": latitude,
             "longitude": longitude,
         },
+        headers=api_key_headers,
     )
     assert building_response.is_success
 
@@ -38,6 +40,7 @@ async def test_create_organization_success(
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
+        headers=api_key_headers,
     )
     assert activity_response.is_success
 
@@ -53,6 +56,7 @@ async def test_create_organization_success(
             "phones": phones,
             "activities": [activity_name],
         },
+        headers=api_key_headers,
     )
 
     assert response.is_success
@@ -68,6 +72,7 @@ async def test_create_organization_fail_name_empty(
     app: FastAPI,
     client: TestClient,
     faker: Faker,
+    api_key_headers: dict[str, str],
 ):
     # Создаем здание
     building_url = app.url_path_for("create_building")
@@ -79,6 +84,7 @@ async def test_create_organization_fail_name_empty(
             "latitude": 55.7558,
             "longitude": 37.6173,
         },
+        headers=api_key_headers,
     )
     assert building_response.is_success
 
@@ -88,6 +94,7 @@ async def test_create_organization_fail_name_empty(
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
+        headers=api_key_headers,
     )
     assert activity_response.is_success
 
@@ -101,6 +108,7 @@ async def test_create_organization_fail_name_empty(
             "phones": ["+7-495-123-4567"],
             "activities": [activity_name],
         },
+        headers=api_key_headers,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST, response.json()
@@ -114,6 +122,7 @@ async def test_create_organization_fail_invalid_phone(
     app: FastAPI,
     client: TestClient,
     faker: Faker,
+    api_key_headers: dict[str, str],
 ):
     # Создаем здание
     building_url = app.url_path_for("create_building")
@@ -125,6 +134,7 @@ async def test_create_organization_fail_invalid_phone(
             "latitude": 55.7558,
             "longitude": 37.6173,
         },
+        headers=api_key_headers,
     )
     assert building_response.is_success
 
@@ -134,6 +144,7 @@ async def test_create_organization_fail_invalid_phone(
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
+        headers=api_key_headers,
     )
     assert activity_response.is_success
 
@@ -148,6 +159,7 @@ async def test_create_organization_fail_invalid_phone(
             "phones": ["123"],  # Невалидный телефон (слишком короткий)
             "activities": [activity_name],
         },
+        headers=api_key_headers,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST, response.json()
@@ -161,6 +173,7 @@ async def test_create_organization_fail_empty_phone(
     app: FastAPI,
     client: TestClient,
     faker: Faker,
+    api_key_headers: dict[str, str],
 ):
     # Создаем здание
     building_url = app.url_path_for("create_building")
@@ -172,6 +185,7 @@ async def test_create_organization_fail_empty_phone(
             "latitude": 55.7558,
             "longitude": 37.6173,
         },
+        headers=api_key_headers,
     )
     assert building_response.is_success
 
@@ -181,6 +195,7 @@ async def test_create_organization_fail_empty_phone(
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
+        headers=api_key_headers,
     )
     assert activity_response.is_success
 
@@ -195,6 +210,7 @@ async def test_create_organization_fail_empty_phone(
             "phones": [""],  # Пустой телефон
             "activities": [activity_name],
         },
+        headers=api_key_headers,
     )
 
     assert response.status_code == status.HTTP_400_BAD_REQUEST, response.json()
@@ -208,6 +224,7 @@ async def test_get_organization_by_id_success(
     app: FastAPI,
     client: TestClient,
     faker: Faker,
+    api_key_headers: dict[str, str],
 ):
     # Создаем здание
     building_url = app.url_path_for("create_building")
@@ -219,6 +236,7 @@ async def test_get_organization_by_id_success(
             "latitude": 55.7558,
             "longitude": 37.6173,
         },
+        headers=api_key_headers,
     )
     assert building_response.is_success
 
@@ -228,6 +246,7 @@ async def test_get_organization_by_id_success(
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
+        headers=api_key_headers,
     )
     assert activity_response.is_success
 
@@ -243,6 +262,7 @@ async def test_get_organization_by_id_success(
             "phones": phones,
             "activities": [activity_name],
         },
+        headers=api_key_headers,
     )
     assert create_response.is_success
     organization_id = create_response.json()["data"]["oid"]
@@ -252,7 +272,7 @@ async def test_get_organization_by_id_success(
         "get_organization_by_id",
         organization_id=organization_id,
     )
-    response: Response = client.get(url=get_url)
+    response: Response = client.get(url=get_url, headers=api_key_headers)
 
     assert response.is_success
     json_data = response.json()
@@ -270,10 +290,11 @@ async def test_get_organization_by_id_success(
 async def test_get_organization_by_id_not_found(
     app: FastAPI,
     client: TestClient,
+    api_key_headers: dict[str, str],
 ):
     organization_id = uuid4()
     url = app.url_path_for("get_organization_by_id", organization_id=organization_id)
-    response: Response = client.get(url=url)
+    response: Response = client.get(url=url, headers=api_key_headers)
 
     assert response.is_success
     json_data = response.json()
@@ -287,6 +308,7 @@ async def test_get_organizations_by_name_success(
     app: FastAPI,
     client: TestClient,
     faker: Faker,
+    api_key_headers: dict[str, str],
 ):
     # Создаем здание
     building_url = app.url_path_for("create_building")
@@ -298,6 +320,7 @@ async def test_get_organizations_by_name_success(
             "latitude": 55.7558,
             "longitude": 37.6173,
         },
+        headers=api_key_headers,
     )
     assert building_response.is_success
 
@@ -307,6 +330,7 @@ async def test_get_organizations_by_name_success(
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
+        headers=api_key_headers,
     )
     assert activity_response.is_success
 
@@ -324,13 +348,18 @@ async def test_get_organizations_by_name_success(
                 "phones": ["+7-495-123-4567"],
                 "activities": [activity_name],
             },
+            headers=api_key_headers,
         )
         assert create_response.is_success
         created_ids.append(create_response.json()["data"]["oid"])
 
     # Получаем список организаций по имени
     url = app.url_path_for("get_organizations_by_name")
-    response: Response = client.get(url=url, params={"name": base_name})
+    response: Response = client.get(
+        url=url,
+        params={"name": base_name},
+        headers=api_key_headers,
+    )
 
     assert response.is_success
     json_data = response.json()
@@ -347,6 +376,7 @@ async def test_get_organizations_by_address_success(
     app: FastAPI,
     client: TestClient,
     faker: Faker,
+    api_key_headers: dict[str, str],
 ):
     # Создаем здание с уникальным адресом
     building_url = app.url_path_for("create_building")
@@ -358,6 +388,7 @@ async def test_get_organizations_by_address_success(
             "latitude": 55.7558,
             "longitude": 37.6173,
         },
+        headers=api_key_headers,
     )
     assert building_response.is_success
 
@@ -367,6 +398,7 @@ async def test_get_organizations_by_address_success(
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
+        headers=api_key_headers,
     )
     assert activity_response.is_success
 
@@ -383,13 +415,18 @@ async def test_get_organizations_by_address_success(
                 "phones": ["+7-495-123-4567"],
                 "activities": [activity_name],
             },
+            headers=api_key_headers,
         )
         assert create_response.is_success
         created_ids.append(create_response.json()["data"]["oid"])
 
     # Получаем список организаций по адресу
     url = app.url_path_for("get_organizations_by_address")
-    response: Response = client.get(url=url, params={"address": unique_address})
+    response: Response = client.get(
+        url=url,
+        params={"address": unique_address},
+        headers=api_key_headers,
+    )
 
     assert response.is_success
     json_data = response.json()

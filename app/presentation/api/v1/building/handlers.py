@@ -20,6 +20,7 @@ from presentation.api.filters import (
 )
 from presentation.api.schemas import (
     ApiResponse,
+    ErrorSchema,
     ListPaginatedResponse,
 )
 from presentation.api.v1.building.schemas import (
@@ -36,6 +37,12 @@ router = APIRouter(prefix="/buildings", tags=["buildings"])
     "",
     status_code=status.HTTP_201_CREATED,
     response_model=ApiResponse[BuildingResponseSchema],
+    responses={
+        status.HTTP_201_CREATED: {"model": ApiResponse[BuildingResponseSchema]},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ErrorSchema},
+    },
 )
 async def create_building(
     request: CreateBuildingRequestSchema,
@@ -60,6 +67,12 @@ async def create_building(
     "/{building_id}",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[BuildingDetailSchema],
+    responses={
+        status.HTTP_200_OK: {"model": ApiResponse[BuildingDetailSchema]},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorSchema},
+    },
 )
 async def get_building_by_id(
     building_id: UUID,
@@ -85,6 +98,13 @@ async def get_building_by_id(
     "",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[BuildingResponseSchema]],
+    responses={
+        status.HTTP_200_OK: {
+            "model": ApiResponse[ListPaginatedResponse[BuildingResponseSchema]],
+        },
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def get_buildings(
     address: str | None = Query(None, description="Адрес здания"),

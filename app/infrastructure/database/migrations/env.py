@@ -11,10 +11,12 @@ from infrastructure.database.models.base import BaseModel
 
 
 from infrastructure.database.models import ActivityModel  # noqa: F401
+from infrastructure.database.models import APIKeyModel  # noqa: F401
 from infrastructure.database.models import BuildingModel  # noqa: F401
 from infrastructure.database.models import OrganizationPhoneModel  # noqa: F401
 
 from infrastructure.database.models import OrganizationModel  # noqa: F401
+from infrastructure.database.models import UserModel  # noqa: F401
 
 from infrastructure.database.models import organization_activity  # noqa: F401
 

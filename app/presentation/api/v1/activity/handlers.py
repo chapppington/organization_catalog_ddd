@@ -20,6 +20,7 @@ from presentation.api.filters import (
 )
 from presentation.api.schemas import (
     ApiResponse,
+    ErrorSchema,
     ListPaginatedResponse,
 )
 from presentation.api.v1.activity.schemas import (
@@ -36,6 +37,12 @@ router = APIRouter(prefix="/activities", tags=["activities"])
     "",
     status_code=status.HTTP_201_CREATED,
     response_model=ApiResponse[ActivityResponseSchema],
+    responses={
+        status.HTTP_201_CREATED: {"model": ApiResponse[ActivityResponseSchema]},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": ErrorSchema},
+    },
 )
 async def create_activity(
     request: CreateActivityRequestSchema,
@@ -59,6 +66,12 @@ async def create_activity(
     "/{activity_id}",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ActivityDetailSchema],
+    responses={
+        status.HTTP_200_OK: {"model": ApiResponse[ActivityDetailSchema]},
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorSchema},
+    },
 )
 async def get_activity_by_id(
     activity_id: UUID,
@@ -84,6 +97,13 @@ async def get_activity_by_id(
     "",
     status_code=status.HTTP_200_OK,
     response_model=ApiResponse[ListPaginatedResponse[ActivityResponseSchema]],
+    responses={
+        status.HTTP_200_OK: {
+            "model": ApiResponse[ListPaginatedResponse[ActivityResponseSchema]],
+        },
+        status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
+        status.HTTP_401_UNAUTHORIZED: {"model": ErrorSchema},
+    },
 )
 async def get_activities(
     name: str | None = Query(None, description="Название вида деятельности"),

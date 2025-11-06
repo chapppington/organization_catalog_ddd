@@ -39,6 +39,10 @@ class Config(BaseSettings):
         alias="POSTGRES_HOST",
     )
 
+    jwt_secret_key: str = Field(
+        alias="JWT_SECRET_KEY",
+    )
+
     @computed_field
     @property
     def postgres_connection_uri(self) -> str:

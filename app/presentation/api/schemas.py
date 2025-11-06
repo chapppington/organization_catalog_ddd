@@ -29,3 +29,14 @@ class ApiResponse(BaseModel, Generic[TData]):
     data: TData | dict = Field(default_factory=dict)
     meta: dict[str, Any] = Field(default_factory=dict)
     errors: list[Any] = Field(default_factory=list)
+
+
+class ErrorSchema(BaseModel):
+    """Схема для ошибок в API."""
+
+    data: dict = Field(default_factory=dict)
+    meta: dict[str, Any] = Field(default_factory=dict)
+    errors: list[dict[str, str]] = Field(
+        default_factory=list,
+        description="Список ошибок с полем message",
+    )

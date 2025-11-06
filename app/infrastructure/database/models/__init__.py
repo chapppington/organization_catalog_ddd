@@ -5,12 +5,18 @@ from .organization import (
     OrganizationModel,
     OrganizationPhoneModel,
 )
+from .user import (
+    APIKeyModel,
+    UserModel,
+)
 
 
 __all__ = [
     "ActivityModel",
+    "APIKeyModel",
     "BuildingModel",
     "OrganizationModel",
     "OrganizationPhoneModel",
+    "UserModel",
     "organization_activity",
 ]
