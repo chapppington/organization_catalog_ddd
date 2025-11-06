@@ -7,6 +7,8 @@ from domain.organization.interfaces.repositories.building import BaseBuildingRep
 from domain.organization.interfaces.repositories.organization import (
     BaseOrganizationRepository,
 )
+from domain.user.interfaces.repositories.api_key import BaseAPIKeyRepository
+from domain.user.interfaces.repositories.user import BaseUserRepository
 from settings.config import Config
 from tests.fixtures import init_dummy_container
 
@@ -39,3 +41,13 @@ def activity_repository(container: Container) -> BaseActivityRepository:
 @fixture()
 def config(container: Container) -> Config:
     return container.resolve(Config)
+
+
+@fixture()
+def user_repository(container: Container) -> BaseUserRepository:
+    return container.resolve(BaseUserRepository)
+
+
+@fixture()
+def api_key_repository(container: Container) -> BaseAPIKeyRepository:
+    return container.resolve(BaseAPIKeyRepository)

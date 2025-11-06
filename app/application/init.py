@@ -9,6 +9,10 @@ from application.commands.activity import (
     CreateActivityCommand,
     CreateActivityCommandHandler,
 )
+from application.commands.api_key import (
+    CreateAPIKeyCommand,
+    CreateAPIKeyCommandHandler,
+)
 from application.commands.building import (
     CreateBuildingCommand,
     CreateBuildingCommandHandler,
@@ -17,12 +21,20 @@ from application.commands.organization import (
     CreateOrganizationCommand,
     CreateOrganizationCommandHandler,
 )
+from application.commands.user import (
+    CreateUserCommand,
+    CreateUserCommandHandler,
+)
 from application.mediator import Mediator
 from application.queries.activity import (
     GetActivitiesQuery,
     GetActivitiesQueryHandler,
     GetActivityByIdQuery,
     GetActivityByIdQueryHandler,
+)
+from application.queries.api_key import (
+    GetAPIKeyByKeyQuery,
+    GetAPIKeyByKeyQueryHandler,
 )
 from application.queries.building import (
     GetBuildingByIdQuery,
@@ -44,6 +56,10 @@ from application.queries.organization import (
     GetOrganizationsByRectangleQuery,
     GetOrganizationsByRectangleQueryHandler,
 )
+from application.queries.user import (
+    AuthenticateUserQuery,
+    AuthenticateUserQueryHandler,
+)
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
 from domain.organization.interfaces.repositories.organization import (
@@ -53,6 +69,10 @@ from domain.organization.services import (
     ActivityService,
     BuildingService,
     OrganizationService,
+)
+from domain.user.services import (
+    APIKeyService,
+    UserService,
 )
 from infrastructure.database.repositories.activity import SQLAlchemyActivityRepository
 from infrastructure.database.repositories.building import SQLAlchemyBuildingRepository
@@ -94,11 +114,15 @@ def _init_container() -> Container:
     container.register(BuildingService, scope=Scope.singleton)
     container.register(ActivityService, scope=Scope.singleton)
     container.register(OrganizationService, scope=Scope.singleton)
+    container.register(UserService, scope=Scope.singleton)
+    container.register(APIKeyService, scope=Scope.singleton)
 
     # Регистрируем command handlers
     container.register(CreateBuildingCommandHandler)
     container.register(CreateActivityCommandHandler)
     container.register(CreateOrganizationCommandHandler)
+    container.register(CreateUserCommandHandler)
+    container.register(CreateAPIKeyCommandHandler)
 
     # Регистрируем query handlers
     container.register(GetActivityByIdQueryHandler)
@@ -111,6 +135,8 @@ def _init_container() -> Container:
     container.register(GetOrganizationsByNameQueryHandler)
     container.register(GetOrganizationsByRadiusQueryHandler)
     container.register(GetOrganizationsByRectangleQueryHandler)
+    container.register(GetAPIKeyByKeyQueryHandler)
+    container.register(AuthenticateUserQueryHandler)
 
     # Инициализируем медиатор
     def init_mediator() -> Mediator:
@@ -128,6 +154,14 @@ def _init_container() -> Container:
         mediator.register_command(
             CreateOrganizationCommand,
             [container.resolve(CreateOrganizationCommandHandler)],
+        )
+        mediator.register_command(
+            CreateUserCommand,
+            [container.resolve(CreateUserCommandHandler)],
+        )
+        mediator.register_command(
+            CreateAPIKeyCommand,
+            [container.resolve(CreateAPIKeyCommandHandler)],
         )
 
         # Регистрируем queries
@@ -170,6 +204,14 @@ def _init_container() -> Container:
         mediator.register_query(
             GetOrganizationsByRectangleQuery,
             container.resolve(GetOrganizationsByRectangleQueryHandler),
+        )
+        mediator.register_query(
+            GetAPIKeyByKeyQuery,
+            container.resolve(GetAPIKeyByKeyQueryHandler),
+        )
+        mediator.register_query(
+            AuthenticateUserQuery,
+            container.resolve(AuthenticateUserQueryHandler),
         )
 
         return mediator

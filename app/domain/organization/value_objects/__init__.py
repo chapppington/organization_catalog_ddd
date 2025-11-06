@@ -1,8 +1,12 @@
-from .activity_name import ActivityNameValueObject
-from .building_address import BuildingAddressValueObject
-from .building_coordinates import BuildingCoordinatesValueObject
-from .organization_name import OrganizationNameValueObject
-from .organization_phone import OrganizationPhoneValueObject
+from .activity import ActivityNameValueObject
+from .building import (
+    BuildingAddressValueObject,
+    BuildingCoordinatesValueObject,
+)
+from .organization import (
+    OrganizationNameValueObject,
+    OrganizationPhoneValueObject,
+)
 
 
 __all__ = (

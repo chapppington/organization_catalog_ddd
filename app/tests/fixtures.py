@@ -9,22 +9,21 @@ from domain.organization.interfaces.repositories.building import BaseBuildingRep
 from domain.organization.interfaces.repositories.organization import (
     BaseOrganizationRepository,
 )
+from domain.user.interfaces.repositories.api_key import BaseAPIKeyRepository
+from domain.user.interfaces.repositories.user import BaseUserRepository
 from infrastructure.database.repositories.dummy import (
     DummyInMemoryActivityRepository,
+    DummyInMemoryAPIKeyRepository,
     DummyInMemoryBuildingRepository,
     DummyInMemoryOrganizationRepository,
+    DummyInMemoryUserRepository,
 )
 
 
 def init_dummy_container() -> Container:
-    """Инициализирует контейнер с dummy репозиториями для тестов.
-
-    Перетирает реальные SQLAlchemy репозитории на in-memory реализации
-
-    """
+    """Инициализирует контейнер с dummy репозиториями для тестов."""
     container = _init_container()
 
-    # Перетираем реальные репозитории на dummy (in-memory)
     container.register(
         BaseOrganizationRepository,
         DummyInMemoryOrganizationRepository,
@@ -40,6 +39,18 @@ def init_dummy_container() -> Container:
     container.register(
         BaseActivityRepository,
         DummyInMemoryActivityRepository,
+        scope=Scope.singleton,
+    )
+
+    container.register(
+        BaseUserRepository,
+        DummyInMemoryUserRepository,
+        scope=Scope.singleton,
+    )
+
+    container.register(
+        BaseAPIKeyRepository,
+        DummyInMemoryAPIKeyRepository,
         scope=Scope.singleton,
     )
 

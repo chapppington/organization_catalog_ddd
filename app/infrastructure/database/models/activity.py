@@ -35,7 +35,7 @@ class ActivityModel(TimedBaseModel):
         lazy="selectin",
     )
 
-    organizations: Mapped[List["OrganizationModel"]] = relationship(  # noqa: F821
+    organizations: Mapped[List["OrganizationModel"]] = relationship(  # noqa  # pyright: ignore[reportUndefinedVariable]
         "OrganizationModel",
         secondary="organization_activity",
         back_populates="activities",

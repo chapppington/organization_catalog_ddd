@@ -1,0 +1,21 @@
+from abc import (
+    ABC,
+    abstractmethod,
+)
+from uuid import UUID
+
+from domain.user.entities import UserEntity
+
+
+class BaseUserRepository(ABC):
+    @abstractmethod
+    async def add(self, user: UserEntity) -> None: ...
+
+    @abstractmethod
+    async def get_by_id(self, user_id: UUID) -> UserEntity | None: ...
+
+    @abstractmethod
+    async def get_by_username(self, username: str) -> UserEntity | None: ...
+
+    @abstractmethod
+    async def check_username_exists(self, username: str) -> bool: ...

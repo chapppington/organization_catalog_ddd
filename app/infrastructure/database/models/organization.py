@@ -69,7 +69,7 @@ class OrganizationModel(TimedBaseModel):
         passive_deletes=True,
     )
 
-    activities: Mapped[List["ActivityModel"]] = relationship(  # noqa: F821
+    activities: Mapped[List["ActivityModel"]] = relationship(  # noqa  # pyright: ignore[reportUndefinedVariable]
         "ActivityModel",
         secondary=organization_activity,
         back_populates="organizations",

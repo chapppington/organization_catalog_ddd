@@ -32,6 +32,8 @@
     "cursorignore",
     "dbdata",
     "docformatter",
+    "gensalt",
+    "hashpw",
     "healthcheck",
     "ipython",
     "isort",
