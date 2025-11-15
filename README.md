@@ -176,19 +176,44 @@ application/
 
 ```
 infrastructure/
-└── database/
-    ├── main.py            # Конфигурация БД
-    ├── models/            # SQLAlchemy модели
-    ├── repositories/      # Реализации репозиториев
-    │   ├── base.py       # Базовый репозиторий
-    │   └── ...           # Конкретные репозитории
-    └── converters/        # Конвертеры Entity ↔ Model
+├── database/              # Работа с базой данных
+│   ├── main.py           # Конфигурация БД и сессий
+│   ├── models/           # SQLAlchemy модели
+│   │   ├── base.py      # Базовые модели
+│   │   ├── activity.py
+│   │   ├── building.py
+│   │   ├── organization.py
+│   │   └── user.py
+│   ├── repositories/     # Реализации репозиториев
+│   │   ├── activity.py
+│   │   ├── api_key.py
+│   │   ├── building.py
+│   │   ├── organization.py
+│   │   ├── user.py
+│   │   └── dummy/        # InMemory репозитории для тестирования
+│   ├── converters/       # Конвертеры Entity ↔ Model
+│   │   ├── activity.py
+│   │   ├── building.py
+│   │   ├── organization.py
+│   │   └── user.py
+│   ├── gateways/         # Шлюзы для работы с БД
+│   │   └── postgres.py   # Database класс с сессиями
+│   └── migrations/       # Alembic миграции
+│       ├── env.py        # Конфигурация миграций
+│       └── versions/     # Файлы миграций
+└── logging/              # Логирование
+    ├── handler.py        # LogstashHandler для отправки логов
+    └── logger.py         # Настройка логгера
 ```
 
 **Реализации:**
-- SQLAlchemy репозитории для работы с PostgreSQL
-- InMemory репозитории для тестирования
-- Конвертеры между доменными сущностями и моделями БД
+- **Database Gateway** (`gateways/postgres.py`) - управление асинхронными сессиями SQLAlchemy (read-write и read-only)
+- **SQLAlchemy репозитории** - реализация доменных интерфейсов репозиториев для работы с PostgreSQL
+- **InMemory репозитории** (`repositories/dummy/`) - реализации для тестирования без БД
+- **Конвертеры** - преобразование между доменными сущностями (Entity) и моделями БД (Model)
+- **Модели** - SQLAlchemy ORM модели
+- **Миграции** - Alembic для управления схемой БД (асинхронная конфигурация)
+- **Логирование** - интеграция с ELK Stack через LogstashHandler
 
 ### 4. Presentation Layer (`app/presentation/`)
 **API endpoints**
