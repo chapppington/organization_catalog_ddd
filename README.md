@@ -389,15 +389,6 @@ Application → LogstashHandler → Logstash → Elasticsearch → Kibana
 - Graceful degradation - приложение продолжает работать даже если Logstash недоступен
 - Отправка логов в формате JSON
 
-#### 2. LoggingMiddleware
-FastAPI middleware, который автоматически логирует все HTTP запросы:
-- Метод и URL запроса
-- Статус код ответа
-- Время выполнения запроса
-- IP адрес клиента
-- User-Agent
-- Обработка ошибок с полным traceback
-
 ### Настройка
 
 Логирование настраивается через переменные окружения в `.env`:

@@ -1,7 +1,7 @@
 import logging
 
-from settings.config import Config
 from infrastructure.logging.handler import LogstashHandler
+from settings.config import Config
 
 
 def setup_logging(config: Config) -> None:
@@ -13,9 +13,6 @@ def setup_logging(config: Config) -> None:
     if logger.handlers:
         logger.handlers.clear()
 
-    # Создаем Logstash handler
-    # Если Logstash недоступен, handler все равно создастся,
-    # но будет пытаться подключиться при каждом emit()
     try:
         logstash_handler = LogstashHandler(
             host=config.logstash_host,
@@ -28,7 +25,6 @@ def setup_logging(config: Config) -> None:
         logger.addHandler(logstash_handler)
     except Exception:
         # Если не удалось создать handler, просто продолжаем без логирования в Logstash
-        # Приложение должно работать даже если Logstash недоступен
         pass
 
     logger.propagate = False
