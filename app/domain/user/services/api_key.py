@@ -20,7 +20,6 @@ class APIKeyService:
         self,
         user_id: UUID,
     ) -> APIKeyEntity:
-        """Создает новый API key для пользователя."""
         user = await self.user_repository.get_by_id(user_id)
 
         if not user:
@@ -32,13 +31,13 @@ class APIKeyService:
         )
 
         await self.api_key_repository.add(api_key)
+
         return api_key
 
     async def get_api_key(
         self,
         key: UUID,
     ) -> APIKeyEntity:
-        """Получает API key по ключу."""
         api_key = await self.api_key_repository.get_by_key(key)
 
         if not api_key:

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import (
     Any,
     Iterable,
@@ -13,19 +14,22 @@ from infrastructure.database.converters.activity import (
     activity_entity_to_model,
     activity_model_to_entity,
 )
-from infrastructure.database.main import async_session_factory
+from infrastructure.database.gateways.postgres import Database
 from infrastructure.database.models.activity import ActivityModel
 
 
+@dataclass
 class SQLAlchemyActivityRepository(BaseActivityRepository):
+    database: Database
+
     async def add(self, activity: ActivityEntity) -> None:
-        async with async_session_factory() as session:
+        async with self.database.get_session() as session:
             model = activity_entity_to_model(activity)
             session.add(model)
             await session.commit()
 
     async def get_by_id(self, activity_id: UUID) -> ActivityEntity | None:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = (
                 select(ActivityModel)
                 .where(ActivityModel.oid == activity_id)
@@ -37,7 +41,7 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
             return activity_model_to_entity(result) if result else None
 
     async def get_by_name(self, name: str) -> ActivityEntity | None:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = (
                 select(ActivityModel)
                 .where(ActivityModel.name == name)
@@ -49,7 +53,7 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
             return activity_model_to_entity(result) if result else None
 
     async def filter(self, **filters: Any) -> Iterable[ActivityEntity]:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = select(ActivityModel).options(selectinload(ActivityModel.parent))
 
             for field, value in filters.items():

@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import (
     Any,
     Iterable,
@@ -20,7 +21,7 @@ from infrastructure.database.converters.organization import (
     organization_model_to_entity,
     organization_phones_to_models,
 )
-from infrastructure.database.main import async_session_factory
+from infrastructure.database.gateways.postgres import Database
 from infrastructure.database.models.activity import ActivityModel
 from infrastructure.database.models.organization import (
     organization_activity,
@@ -28,9 +29,12 @@ from infrastructure.database.models.organization import (
 )
 
 
+@dataclass
 class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
+    database: Database
+
     async def add(self, organization: OrganizationEntity) -> None:
-        async with async_session_factory() as session:
+        async with self.database.get_session() as session:
             org_model = organization_entity_to_model(organization)
             session.add(org_model)
             await session.flush()
@@ -51,7 +55,7 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             await session.commit()
 
     async def get_by_id(self, organization_id: UUID) -> OrganizationEntity | None:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = (
                 select(OrganizationModel)
                 .where(OrganizationModel.oid == organization_id)
@@ -66,7 +70,7 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             return organization_model_to_entity(result) if result else None
 
     async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = select(OrganizationModel).options(
                 selectinload(OrganizationModel.building),
                 selectinload(OrganizationModel.phones),

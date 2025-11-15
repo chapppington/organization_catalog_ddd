@@ -1,4 +1,5 @@
 import math
+from dataclasses import dataclass
 from typing import (
     Any,
     Iterable,
@@ -17,11 +18,14 @@ from infrastructure.database.converters.building import (
     building_entity_to_model,
     building_model_to_entity,
 )
-from infrastructure.database.main import async_session_factory
 from infrastructure.database.models.building import BuildingModel
+from infrastructure.database.gateways.postgres import Database
 
 
+@dataclass
 class SQLAlchemyBuildingRepository(BaseBuildingRepository):
+    database: Database
+
     @staticmethod
     def _haversine_distance_sql(
         center_latitude: float,
@@ -65,13 +69,13 @@ class SQLAlchemyBuildingRepository(BaseBuildingRepository):
         return distance_expr
 
     async def add(self, building: BuildingEntity) -> None:
-        async with async_session_factory() as session:
+        async with self.database.get_session() as session:
             model = building_entity_to_model(building)
             session.add(model)
             await session.commit()
 
     async def get_by_id(self, building_id: UUID) -> BuildingEntity | None:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = select(BuildingModel).where(BuildingModel.oid == building_id)
             res = await session.execute(stmt)
             result = res.scalar_one_or_none()
@@ -79,7 +83,7 @@ class SQLAlchemyBuildingRepository(BaseBuildingRepository):
             return building_model_to_entity(result) if result else None
 
     async def get_by_address(self, address: str) -> BuildingEntity | None:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = select(BuildingModel).where(BuildingModel.address == address)
             res = await session.execute(stmt)
             result = res.scalar_one_or_none()
@@ -87,7 +91,7 @@ class SQLAlchemyBuildingRepository(BaseBuildingRepository):
             return building_model_to_entity(result) if result else None
 
     async def filter(self, **filters: Any) -> Iterable[BuildingEntity]:
-        async with async_session_factory() as session:
+        async with self.database.get_read_only_session() as session:
             stmt = select(BuildingModel)
 
             # Обработка географических параметров (радиус)

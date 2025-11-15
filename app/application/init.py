@@ -83,6 +83,7 @@ from infrastructure.database.repositories import (
     SQLAlchemyOrganizationRepository,
     SQLAlchemyUserRepository,
 )
+from infrastructure.database.gateways.postgres import Database
 from settings.config import Config
 
 
@@ -97,39 +98,28 @@ def _init_container() -> Container:
     # Регистрируем конфиг
     container.register(Config, instance=Config(), scope=Scope.singleton)
 
+    def init_database() -> Database:
+        config: Config = container.resolve(Config)
+        return Database(
+            url=config.postgres_connection_uri,
+            ro_url=config.postgres_connection_uri,
+        )
+
+    container.register(Database, factory=init_database, scope=Scope.singleton)
+
     # Регистрируем репозитории
-    container.register(
-        BaseBuildingRepository,
-        instance=SQLAlchemyBuildingRepository(),
-        scope=Scope.singleton,
-    )
-    container.register(
-        BaseActivityRepository,
-        instance=SQLAlchemyActivityRepository(),
-        scope=Scope.singleton,
-    )
-    container.register(
-        BaseOrganizationRepository,
-        instance=SQLAlchemyOrganizationRepository(),
-        scope=Scope.singleton,
-    )
-    container.register(
-        BaseUserRepository,
-        instance=SQLAlchemyUserRepository(),
-        scope=Scope.singleton,
-    )
-    container.register(
-        BaseAPIKeyRepository,
-        instance=SQLAlchemyAPIKeyRepository(),
-        scope=Scope.singleton,
-    )
+    container.register(BaseBuildingRepository, SQLAlchemyBuildingRepository)
+    container.register(BaseActivityRepository, SQLAlchemyActivityRepository)
+    container.register(BaseOrganizationRepository, SQLAlchemyOrganizationRepository)
+    container.register(BaseUserRepository, SQLAlchemyUserRepository)
+    container.register(BaseAPIKeyRepository, SQLAlchemyAPIKeyRepository)
 
     # Регистрируем доменные сервисы
-    container.register(BuildingService, scope=Scope.singleton)
-    container.register(ActivityService, scope=Scope.singleton)
-    container.register(OrganizationService, scope=Scope.singleton)
-    container.register(UserService, scope=Scope.singleton)
-    container.register(APIKeyService, scope=Scope.singleton)
+    container.register(BuildingService)
+    container.register(ActivityService)
+    container.register(OrganizationService)
+    container.register(UserService)
+    container.register(APIKeyService)
 
     # Регистрируем command handlers
     container.register(CreateBuildingCommandHandler)
@@ -230,6 +220,6 @@ def _init_container() -> Container:
 
         return mediator
 
-    container.register(Mediator, factory=init_mediator)
+    container.register(Mediator, factory=init_mediator, scope=Scope.singleton)
 
     return container

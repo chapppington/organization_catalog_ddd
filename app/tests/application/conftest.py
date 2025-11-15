@@ -1,1 +1,1 @@
-from tests.application.conftest import *  # noqa
+from tests.conftest import *  # noqa

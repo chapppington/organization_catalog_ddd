@@ -18,7 +18,6 @@ class BuildingService:
         latitude: float,
         longitude: float,
     ) -> BuildingEntity:
-        """Создает новое здание."""
         building = BuildingEntity(
             address=BuildingAddressValueObject(address),
             coordinates=BuildingCoordinatesValueObject(

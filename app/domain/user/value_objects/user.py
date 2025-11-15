@@ -33,9 +33,8 @@ class UsernameValueObject(BaseValueObject):
                 max_length=MAX_USERNAME_LENGTH,
             )
 
-        # Username can contain letters, digits, and underscores
-        # Must start with a letter or digit
         username_pattern = r"^[a-zA-Z0-9][a-zA-Z0-9_]*$"
+
         if not re.match(username_pattern, self.value):
             raise InvalidUsernameException(
                 username=self.value,

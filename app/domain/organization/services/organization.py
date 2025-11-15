@@ -33,26 +33,11 @@ class OrganizationService:
         phones: list[str],
         activities: list[str],
     ) -> OrganizationEntity:
-        """Создает новую организацию.
-
-        Args:
-            name: Название организации
-            address: Адрес здания
-            phones: Список телефонов
-            activities: Список названий видов деятельности
-
-        Raises:
-            BuildingNotFoundException: Если здание не найдено
-            ActivityNotFoundException: Если хотя бы одна деятельность не найдена
-
-        """
-        # Находим здание по адресу
         building = await self.building_repository.get_by_address(address)
 
         if not building:
             raise BuildingNotFoundException(address=address)
 
-        # Находим все виды деятельности по названиям
         activity_entities = []
 
         for activity_name in activities:
@@ -63,7 +48,6 @@ class OrganizationService:
 
             activity_entities.append(activity)
 
-        # Создаем организацию
         organization = OrganizationEntity(
             name=OrganizationNameValueObject(name),
             building=building,
@@ -79,7 +63,6 @@ class OrganizationService:
         self,
         organization_id: str,
     ) -> OrganizationEntity | None:
-        """Вывод информации об организации по её идентификатору."""
         return await self.organization_repository.get_by_id(organization_id)
 
     async def get_organizations_by_name(
@@ -88,7 +71,6 @@ class OrganizationService:
         limit: int,
         offset: int,
     ) -> Tuple[Iterable[OrganizationEntity], int]:
-        """Поиск организации по названию."""
         organizations = list(await self.organization_repository.filter(name=name))
         total = len(organizations)
         return organizations[offset : offset + limit], total
@@ -99,15 +81,12 @@ class OrganizationService:
         limit: int,
         offset: int,
     ) -> Tuple[Iterable[OrganizationEntity], int]:
-        """Список всех организаций находящихся по указанному адресу."""
-        # Ищем здания по частичному совпадению адреса
         buildings = await self.building_repository.filter(address=address)
         buildings_list = list(buildings)
 
         if not buildings_list:
             return [], 0
 
-        # Собираем организации из всех найденных зданий
         all_organizations = []
         for building in buildings_list:
             organizations = await self.organization_repository.filter(
