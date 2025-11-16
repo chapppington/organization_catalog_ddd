@@ -33,10 +33,10 @@ fi
 
 # Останавливаем только приложение, НЕ базу данных (чтобы сохранить данные)
 # ВАЖНО: volumes объявлены в storages.yaml и должны сохраняться между деплоями
-# Используем 'stop' вместо 'down', чтобы не удалять контейнеры и volumes
+# Используем прямой docker stop/rm для контейнера, чтобы избежать проблем с зависимостями
 echo "🛑 Stopping application container..."
-docker compose -f docker_compose/app.yaml --env-file .env stop || true
-docker compose -f docker_compose/app.yaml --env-file .env rm -f || true
+docker stop main-app 2>/dev/null || true
+docker rm main-app 2>/dev/null || true
 
 # Проверяем, что volumes существуют (для отладки)
 echo "🔍 Checking volumes..."
@@ -48,10 +48,13 @@ else
 fi
 
 # Собираем и запускаем контейнеры
-# Сначала запускаем storages (postgres), затем приложение
+# Сначала запускаем storages (postgres), затем приложение с обоими файлами
 echo "🔨 Building and starting containers..."
 docker compose -f docker_compose/storages.yaml --env-file .env up -d
-docker compose -f docker_compose/app.yaml --env-file .env up --build -d
+# Используем оба файла вместе, чтобы зависимости работали
+# postgres уже запущен, поэтому он не будет пересоздан
+echo "🔨 Building and starting application..."
+docker compose -f docker_compose/storages.yaml -f docker_compose/app.yaml --env-file .env up --build -d main-app
 
 # Читаем переменные окружения из .env заранее
 DB_NAME=$(grep -E "^POSTGRES_DB=" .env 2>/dev/null | cut -d '=' -f2 | tr -d '"' | tr -d "'" || echo "organization_catalog")
