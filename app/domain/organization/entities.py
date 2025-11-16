@@ -13,7 +13,9 @@ from domain.organization.value_objects import (
     OrganizationNameValueObject,
     OrganizationPhoneValueObject,
 )
-from settings import config
+
+
+MAX_ACTIVITY_NESTING_LEVEL = 3
 
 
 @dataclass(eq=False)
@@ -25,7 +27,7 @@ class ActivityEntity(BaseEntity):
         self._validate_nesting_level()
 
     def _validate_nesting_level(self):
-        max_level = config.max_activity_nesting_level
+        max_level = MAX_ACTIVITY_NESTING_LEVEL
         level = self._calculate_nesting_level()
         if level > max_level:
             raise ActivityNestingLevelExceededException(
