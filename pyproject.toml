@@ -88,6 +88,9 @@ sections=[
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+exclude = [
+    "**/migrations/**",
+]
 
 [tool.ruff.lint]
 ignore = ["E501", "I"]
