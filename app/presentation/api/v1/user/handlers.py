@@ -121,7 +121,7 @@ async def refresh_token(
 ) -> ApiResponse[RefreshTokenResponseSchema]:
     """Обновление access токена с помощью refresh токена из cookies."""
     # Создаем новый access токен
-    access_token = auth_service.create_access_token(refresh_payload["sub"])
+    access_token = auth_service.create_access_token(refresh_payload.sub)
 
     # Устанавливаем новый access токен в cookie
     auth_service.set_access_cookies(token=access_token, response=response)
@@ -148,7 +148,7 @@ async def create_api_key(
     container=Depends(init_container),
 ) -> ApiResponse[APIKeyResponseSchema]:
     """Создание API ключа для текущего пользователя."""
-    user_id = UUID(token_payload["sub"])
+    user_id = UUID(token_payload.sub)
 
     mediator: Mediator = container.resolve(Mediator)
     command = CreateAPIKeyCommand(user_id=user_id)
