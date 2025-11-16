@@ -1,5 +1,5 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 from uuid import UUID
 
 from infrastructure.database.converters.organization import (
@@ -42,8 +42,7 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             if organization.activities:
                 activities_ids = organization_activities_ids(organization)
                 values = [
-                    {"organization_id": org_model.oid, "activity_id": activity_id}
-                    for activity_id in activities_ids
+                    {"organization_id": org_model.oid, "activity_id": activity_id} for activity_id in activities_ids
                 ]
                 await session.execute(insert(organization_activity).values(values))
 
@@ -80,7 +79,8 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             return results
 
     async def get_by_building_id(
-        self, building_id: UUID,
+        self,
+        building_id: UUID,
     ) -> Iterable[OrganizationEntity]:
         async with self.database.get_read_only_session() as session:
             stmt = (
@@ -97,7 +97,8 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             return results
 
     async def get_by_activity_name(
-        self, activity_name: str,
+        self,
+        activity_name: str,
     ) -> Iterable[OrganizationEntity]:
         async with self.database.get_read_only_session() as session:
             stmt = (

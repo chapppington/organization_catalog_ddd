@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -14,13 +13,13 @@ from domain.organization.entities import (
 # Activity Schemas
 class CreateActivityRequestSchema(BaseModel):
     name: str
-    parent_id: Optional[UUID] = None
+    parent_id: UUID | None = None
 
 
 class ActivityResponseSchema(BaseModel):
     oid: UUID
     name: str
-    parent_id: Optional[UUID] = None
+    parent_id: UUID | None = None
 
     @classmethod
     def from_entity(cls, entity: ActivityEntity) -> "ActivityResponseSchema":
@@ -34,7 +33,7 @@ class ActivityResponseSchema(BaseModel):
 class ActivityDetailSchema(BaseModel):
     oid: UUID
     name: str
-    parent_id: Optional[UUID] = None
+    parent_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -134,10 +133,7 @@ class OrganizationDetailSchema(BaseModel):
             name=entity.name.as_generic_type(),
             building=BuildingDetailSchema.from_entity(entity.building),
             phones=[phone.as_generic_type() for phone in entity.phones],
-            activities=[
-                ActivityDetailSchema.from_entity(activity)
-                for activity in entity.activities
-            ],
+            activities=[ActivityDetailSchema.from_entity(activity) for activity in entity.activities],
             created_at=entity.created_at,
             updated_at=entity.updated_at,
         )

@@ -11,7 +11,7 @@ from faker import Faker
 from httpx import Response
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_success(
     app: FastAPI,
     client: TestClient,
@@ -67,7 +67,7 @@ async def test_create_organization_success(
     assert len(json_data["data"]["activities"]) == 1
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_fail_name_empty(
     app: FastAPI,
     client: TestClient,
@@ -117,7 +117,7 @@ async def test_create_organization_fail_name_empty(
     assert json_data["errors"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_fail_invalid_phone(
     app: FastAPI,
     client: TestClient,
@@ -168,7 +168,7 @@ async def test_create_organization_fail_invalid_phone(
     assert json_data["errors"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_fail_empty_phone(
     app: FastAPI,
     client: TestClient,
@@ -219,7 +219,7 @@ async def test_create_organization_fail_empty_phone(
     assert json_data["errors"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organization_by_id_success(
     app: FastAPI,
     client: TestClient,
@@ -286,7 +286,7 @@ async def test_get_organization_by_id_success(
     assert "activities" in json_data["data"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organization_by_id_not_found(
     app: FastAPI,
     client: TestClient,
@@ -303,7 +303,7 @@ async def test_get_organization_by_id_not_found(
     assert any("not found" in error["message"].lower() for error in json_data["errors"])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organizations_by_name_success(
     app: FastAPI,
     client: TestClient,
@@ -371,7 +371,7 @@ async def test_get_organizations_by_name_success(
     assert json_data["data"]["pagination"]["total"] >= len(created_ids)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organizations_by_address_success(
     app: FastAPI,
     client: TestClient,
@@ -438,7 +438,7 @@ async def test_get_organizations_by_address_success(
     assert json_data["data"]["pagination"]["total"] >= len(created_ids)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_fail_duplicate_name(
     app: FastAPI,
     client: TestClient,
@@ -502,6 +502,4 @@ async def test_create_organization_fail_duplicate_name(
     json_data = duplicate_response.json()
 
     assert json_data["errors"]
-    assert any(
-        "already exists" in error["message"].lower() for error in json_data["errors"]
-    )
+    assert any("already exists" in error["message"].lower() for error in json_data["errors"])

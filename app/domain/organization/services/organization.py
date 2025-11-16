@@ -1,8 +1,5 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import (
-    Iterable,
-    Tuple,
-)
 
 from application.exceptions.organization import OrganizationWithThatNameAlreadyExistsException
 from domain.organization.entities import OrganizationEntity
@@ -79,7 +76,7 @@ class OrganizationService:
         name: str,
         limit: int,
         offset: int,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         organizations = list(await self.organization_repository.get_by_name(name))
         total = len(organizations)
         return organizations[offset : offset + limit], total
@@ -89,7 +86,7 @@ class OrganizationService:
         address: str,
         limit: int,
         offset: int,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         building = await self.building_repository.get_by_address(address)
 
         if not building:
@@ -109,7 +106,7 @@ class OrganizationService:
         activity_name: str,
         limit: int,
         offset: int,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         """Поиск организаций по виду деятельности (включая вложенные)
 
         Например, поиск по "Еда" найдет организации с видами деятельности:
@@ -154,7 +151,7 @@ class OrganizationService:
         radius: float,
         limit: int,
         offset: int,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         """Список организаций в заданном радиусе относительно точки на
         карте."""
         buildings = await self.building_repository.filter_by_radius(
@@ -185,7 +182,7 @@ class OrganizationService:
         lon_max: float,
         limit: int,
         offset: int,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         """Список организаций в прямоугольной области."""
 
         buildings = await self.building_repository.filter_by_bounding_box(

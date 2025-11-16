@@ -18,6 +18,4 @@ class QueryHandlerNotRegisteredException(LogicException):
 
     @property
     def message(self) -> str:
-        return (
-            f"Query handler not registered for query type: {self.query_type.__name__}"
-        )
+        return f"Query handler not registered for query type: {self.query_type.__name__}"

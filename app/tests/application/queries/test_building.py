@@ -8,7 +8,7 @@ from application.queries.building import (
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_id_query(mediator: Mediator):
     """Тест получения здания по ID."""
     # Создаем здание
@@ -32,7 +32,7 @@ async def test_get_building_by_id_query(mediator: Mediator):
     assert result.coordinates.longitude == 37.6173
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_id_not_found(mediator: Mediator):
     """Тест получения несуществующего здания."""
     result = await mediator.handle_query(
@@ -42,7 +42,7 @@ async def test_get_building_by_id_not_found(mediator: Mediator):
     assert result is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_address_query(mediator: Mediator):
     """Тест получения здания по адресу."""
     building, *_ = await mediator.handle_command(
@@ -64,7 +64,7 @@ async def test_get_building_by_address_query(mediator: Mediator):
     assert result.coordinates.longitude == 37.6173
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_address_not_found(mediator: Mediator):
     """Тест получения несуществующего здания по адресу."""
     result = await mediator.handle_query(

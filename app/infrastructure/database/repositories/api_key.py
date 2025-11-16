@@ -26,11 +26,7 @@ class SQLAlchemyAPIKeyRepository(BaseAPIKeyRepository):
 
     async def get_by_key(self, key: UUID) -> APIKeyEntity | None:
         async with self.database.get_read_only_session() as session:
-            stmt = (
-                select(APIKeyModel)
-                .where(APIKeyModel.key == key)
-                .options(selectinload(APIKeyModel.user))
-            )
+            stmt = select(APIKeyModel).where(APIKeyModel.key == key).options(selectinload(APIKeyModel.user))
             res = await session.execute(stmt)
             result = res.scalar_one_or_none()
 

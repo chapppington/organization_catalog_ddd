@@ -10,7 +10,7 @@ from domain.organization.exceptions import (
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_building_command_success(
     building_repository: BaseBuildingRepository,
     mediator: Mediator,
@@ -39,7 +39,7 @@ async def test_create_building_command_success(
     assert saved_building.oid == building.oid
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_building_command_invalid_latitude(
     mediator: Mediator,
 ):
@@ -54,7 +54,7 @@ async def test_create_building_command_invalid_latitude(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_building_command_invalid_longitude(
     mediator: Mediator,
 ):
@@ -69,7 +69,7 @@ async def test_create_building_command_invalid_longitude(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_building_command_empty_address(
     mediator: Mediator,
 ):

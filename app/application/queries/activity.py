@@ -1,8 +1,5 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import (
-    Iterable,
-    Tuple,
-)
 from uuid import UUID
 
 from application.queries.base import (
@@ -43,7 +40,7 @@ class GetActivityByIdQueryHandler(
 class GetActivitiesQueryHandler(
     BaseQueryHandler[
         GetActivitiesQuery,
-        Tuple[Iterable[ActivityEntity], int],
+        tuple[Iterable[ActivityEntity], int],
     ],
 ):
     activity_service: ActivityService
@@ -51,7 +48,7 @@ class GetActivitiesQueryHandler(
     async def handle(
         self,
         query: GetActivitiesQuery,
-    ) -> Tuple[Iterable[ActivityEntity], int]:
+    ) -> tuple[Iterable[ActivityEntity], int]:
         return await self.activity_service.get_activities(
             name=query.name,
             parent_id=query.parent_id,

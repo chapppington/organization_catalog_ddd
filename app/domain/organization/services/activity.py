@@ -1,8 +1,5 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import (
-    Iterable,
-    Tuple,
-)
 from uuid import UUID
 
 from application.exceptions.activity import ActivityWithThatNameAlreadyExistsException
@@ -54,7 +51,7 @@ class ActivityService:
         parent_id: UUID | None = None,
         limit: int = 10,
         offset: int = 0,
-    ) -> Tuple[Iterable[ActivityEntity], int]:
+    ) -> tuple[Iterable[ActivityEntity], int]:
         """Получить список активностей с фильтрацией и пагинацией."""
         filters_dict = {}
         if name is not None:

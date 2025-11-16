@@ -17,8 +17,6 @@ class DummyInMemoryAPIKeyRepository(BaseAPIKeyRepository):
 
     async def get_by_key(self, key: UUID) -> APIKeyEntity | None:
         try:
-            return next(
-                api_key for api_key in self._saved_api_keys if api_key.key == key
-            )
+            return next(api_key for api_key in self._saved_api_keys if api_key.key == key)
         except StopIteration:
             return None

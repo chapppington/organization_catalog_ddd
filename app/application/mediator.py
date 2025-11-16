@@ -1,9 +1,9 @@
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import (
     dataclass,
     field,
 )
-from typing import Iterable
 
 from application.commands.base import (
     BaseCommand,

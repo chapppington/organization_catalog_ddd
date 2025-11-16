@@ -1,8 +1,5 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import (
-    Iterable,
-    Tuple,
-)
 
 from application.queries.base import (
     BaseQuery,
@@ -76,7 +73,7 @@ class GetOrganizationByIdQueryHandler(
 class GetOrganizationsByAddressQueryHandler(
     BaseQueryHandler[
         GetOrganizationsByAddressQuery,
-        Tuple[Iterable[OrganizationEntity], int],
+        tuple[Iterable[OrganizationEntity], int],
     ],
 ):
     organization_service: OrganizationService
@@ -84,7 +81,7 @@ class GetOrganizationsByAddressQueryHandler(
     async def handle(
         self,
         query: GetOrganizationsByAddressQuery,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_address(
             address=query.address,
             limit=query.limit,
@@ -96,7 +93,7 @@ class GetOrganizationsByAddressQueryHandler(
 class GetOrganizationsByActivityQueryHandler(
     BaseQueryHandler[
         GetOrganizationsByActivityQuery,
-        Tuple[Iterable[OrganizationEntity], int],
+        tuple[Iterable[OrganizationEntity], int],
     ],
 ):
     organization_service: OrganizationService
@@ -104,7 +101,7 @@ class GetOrganizationsByActivityQueryHandler(
     async def handle(
         self,
         query: GetOrganizationsByActivityQuery,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_activity(
             activity_name=query.activity_name,
             limit=query.limit,
@@ -116,7 +113,7 @@ class GetOrganizationsByActivityQueryHandler(
 class GetOrganizationsByNameQueryHandler(
     BaseQueryHandler[
         GetOrganizationsByNameQuery,
-        Tuple[Iterable[OrganizationEntity], int],
+        tuple[Iterable[OrganizationEntity], int],
     ],
 ):
     organization_service: OrganizationService
@@ -124,7 +121,7 @@ class GetOrganizationsByNameQueryHandler(
     async def handle(
         self,
         query: GetOrganizationsByNameQuery,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_name(
             name=query.name,
             limit=query.limit,
@@ -136,7 +133,7 @@ class GetOrganizationsByNameQueryHandler(
 class GetOrganizationsByRadiusQueryHandler(
     BaseQueryHandler[
         GetOrganizationsByRadiusQuery,
-        Tuple[Iterable[OrganizationEntity], int],
+        tuple[Iterable[OrganizationEntity], int],
     ],
 ):
     organization_service: OrganizationService
@@ -144,7 +141,7 @@ class GetOrganizationsByRadiusQueryHandler(
     async def handle(
         self,
         query: GetOrganizationsByRadiusQuery,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_radius(
             latitude=query.latitude,
             longitude=query.longitude,
@@ -158,7 +155,7 @@ class GetOrganizationsByRadiusQueryHandler(
 class GetOrganizationsByRectangleQueryHandler(
     BaseQueryHandler[
         GetOrganizationsByRectangleQuery,
-        Tuple[Iterable[OrganizationEntity], int],
+        tuple[Iterable[OrganizationEntity], int],
     ],
 ):
     organization_service: OrganizationService
@@ -166,7 +163,7 @@ class GetOrganizationsByRectangleQueryHandler(
     async def handle(
         self,
         query: GetOrganizationsByRectangleQuery,
-    ) -> Tuple[Iterable[OrganizationEntity], int]:
+    ) -> tuple[Iterable[OrganizationEntity], int]:
         return await self.organization_service.get_organizations_by_rectangle(
             lat_min=query.lat_min,
             lat_max=query.lat_max,

@@ -1,9 +1,9 @@
 import math
+from collections.abc import Iterable
 from dataclasses import (
     dataclass,
     field,
 )
-from typing import Iterable
 
 from domain.organization.entities import BuildingEntity
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
@@ -30,21 +30,14 @@ class DummyInMemoryBuildingRepository(BaseBuildingRepository):
         delta_lat = math.radians(lat2 - lat1)
         delta_lon = math.radians(lon2 - lon1)
 
-        a = (
-            math.sin(delta_lat / 2) ** 2
-            + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
-        )
+        a = math.sin(delta_lat / 2) ** 2 + math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(delta_lon / 2) ** 2
         c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
         return R * c
 
     async def get_by_id(self, building_id: str) -> BuildingEntity | None:
         try:
-            return next(
-                building
-                for building in self._saved_buildings
-                if building.oid == building_id
-            )
+            return next(building for building in self._saved_buildings if building.oid == building_id)
         except StopIteration:
             return None
 

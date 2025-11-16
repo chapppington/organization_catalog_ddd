@@ -12,7 +12,7 @@ from domain.organization.interfaces.repositories.activity import BaseActivityRep
 from settings.config import Config
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_activity_command_success(
     activity_repository: BaseActivityRepository,
     mediator: Mediator,
@@ -37,7 +37,7 @@ async def test_create_activity_command_success(
     assert saved_activity.oid == activity.oid
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_activity_command_with_parent(
     activity_repository: BaseActivityRepository,
     mediator: Mediator,
@@ -69,7 +69,7 @@ async def test_create_activity_command_with_parent(
     assert saved_activity is not None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_activity_command_parent_not_found(
     mediator: Mediator,
 ):
@@ -83,7 +83,7 @@ async def test_create_activity_command_parent_not_found(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_activity_command_empty_name(
     mediator: Mediator,
 ):
@@ -97,7 +97,7 @@ async def test_create_activity_command_empty_name(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_activity_command_max_nesting_level(
     mediator: Mediator,
     config: Config,
@@ -133,7 +133,7 @@ async def test_create_activity_command_max_nesting_level(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_activity_command_duplicate_name(
     mediator: Mediator,
 ):

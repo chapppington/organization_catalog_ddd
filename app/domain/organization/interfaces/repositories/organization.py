@@ -2,8 +2,8 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 from uuid import UUID
 
 from domain.organization.entities import OrganizationEntity
@@ -22,10 +22,12 @@ class BaseOrganizationRepository(ABC):
 
     @abstractmethod
     async def get_by_building_id(
-        self, building_id: UUID,
+        self,
+        building_id: UUID,
     ) -> Iterable[OrganizationEntity]: ...
 
     @abstractmethod
     async def get_by_activity_name(
-        self, activity_name: str,
+        self,
+        activity_name: str,
     ) -> Iterable[OrganizationEntity]: ...

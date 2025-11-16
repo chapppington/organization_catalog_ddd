@@ -21,7 +21,7 @@ class ActivityModel(TimedBaseModel):
     __tablename__ = "activity"
 
     name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
-    parent_id: Mapped[Optional[UUID]] = mapped_column(
+    parent_id: Mapped[UUID | None] = mapped_column(
         UUIDType(as_uuid=True),
         ForeignKey("activity.oid", ondelete="SET NULL"),
         nullable=True,

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from infrastructure.database.models.base import TimedBaseModel
@@ -47,8 +46,8 @@ class APIKeyModel(TimedBaseModel):
         ForeignKey("user.oid", ondelete="CASCADE"),
         nullable=False,
     )
-    last_used: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    banned_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    last_used: Mapped[datetime | None] = mapped_column(nullable=True)
+    banned_at: Mapped[datetime | None] = mapped_column(nullable=True)
 
     user: Mapped["UserModel"] = relationship(
         "UserModel",

@@ -6,7 +6,7 @@ from domain.user.exceptions import UserAlreadyExistsException
 from domain.user.interfaces.repositories.user import BaseUserRepository
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_user_command_success(
     user_repository: BaseUserRepository,
     mediator: Mediator,
@@ -34,7 +34,7 @@ async def test_create_user_command_success(
     assert saved_user.username.value == username
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_user_command_duplicate_username(
     mediator: Mediator,
 ):
@@ -60,7 +60,7 @@ async def test_create_user_command_duplicate_username(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_user_command_short_password(
     mediator: Mediator,
 ):
@@ -79,7 +79,7 @@ async def test_create_user_command_short_password(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_user_command_empty_password(
     mediator: Mediator,
 ):
@@ -98,7 +98,7 @@ async def test_create_user_command_empty_password(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_user_command_password_without_letter(
     mediator: Mediator,
 ):
@@ -117,7 +117,7 @@ async def test_create_user_command_password_without_letter(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_user_command_password_without_digit(
     mediator: Mediator,
 ):

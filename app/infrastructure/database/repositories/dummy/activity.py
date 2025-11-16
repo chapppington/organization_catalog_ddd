@@ -1,11 +1,9 @@
+from collections.abc import Iterable
 from dataclasses import (
     dataclass,
     field,
 )
-from typing import (
-    Any,
-    Iterable,
-)
+from typing import Any
 from uuid import UUID
 
 from domain.organization.entities import ActivityEntity
@@ -21,11 +19,7 @@ class DummyInMemoryActivityRepository(BaseActivityRepository):
 
     async def get_by_id(self, activity_id: UUID) -> ActivityEntity | None:
         try:
-            return next(
-                activity
-                for activity in self._saved_activities
-                if activity.oid == activity_id
-            )
+            return next(activity for activity in self._saved_activities if activity.oid == activity_id)
         except StopIteration:
             return None
 
@@ -43,19 +37,13 @@ class DummyInMemoryActivityRepository(BaseActivityRepository):
     async def filter(self, **filters: Any) -> Iterable[ActivityEntity]:
         results = self._saved_activities.copy()
 
-        if "name" in filters and filters["name"]:
+        if filters.get("name"):
             search_term = filters["name"].lower()
-            results = [
-                activity
-                for activity in results
-                if search_term in activity.name.as_generic_type().lower()
-            ]
+            results = [activity for activity in results if search_term in activity.name.as_generic_type().lower()]
 
-        if "parent_id" in filters and filters["parent_id"]:
+        if filters.get("parent_id"):
             results = [
-                activity
-                for activity in results
-                if activity.parent and activity.parent.oid == filters["parent_id"]
+                activity for activity in results if activity.parent and activity.parent.oid == filters["parent_id"]
             ]
 
         return results

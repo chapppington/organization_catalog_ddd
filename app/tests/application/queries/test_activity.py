@@ -8,7 +8,7 @@ from application.queries.activity import (
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_activity_by_id_query(mediator: Mediator):
     """Тест получения деятельности по ID."""
     # Создаем деятельность
@@ -26,7 +26,7 @@ async def test_get_activity_by_id_query(mediator: Mediator):
     assert result.name.as_generic_type() == "Еда"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_activity_by_id_not_found(mediator: Mediator):
     """Тест получения несуществующей деятельности."""
     result = await mediator.handle_query(
@@ -36,7 +36,7 @@ async def test_get_activity_by_id_not_found(mediator: Mediator):
     assert result is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_activities_query_with_name_filter(mediator: Mediator):
     """Тест получения списка деятельностей с фильтром по названию."""
     # Создаем несколько деятельностей
@@ -59,7 +59,7 @@ async def test_get_activities_query_with_name_filter(mediator: Mediator):
     assert "Еда на вынос" in names
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_activities_query_with_parent_id_filter(mediator: Mediator):
     """Тест получения списка деятельностей с фильтром по parent_id."""
     # Создаем родительскую деятельность
@@ -91,7 +91,7 @@ async def test_get_activities_query_with_parent_id_filter(mediator: Mediator):
     assert "Молочная продукция" in names
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_activities_query_with_both_filters(mediator: Mediator):
     """Тест получения списка деятельностей с фильтрами по name и parent_id."""
     # Создаем родительскую деятельность
@@ -123,7 +123,7 @@ async def test_get_activities_query_with_both_filters(mediator: Mediator):
     assert results_list[0].name.as_generic_type() == "Мясная продукция"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_activities_query_without_filters(mediator: Mediator):
     """Тест получения списка деятельностей без фильтров."""
     # Создаем несколько деятельностей
@@ -141,7 +141,7 @@ async def test_get_activities_query_without_filters(mediator: Mediator):
     assert total == 3
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_activities_query_pagination(mediator: Mediator):
     """Тест пагинации при получении списка деятельностей."""
     # Создаем 5 деятельностей

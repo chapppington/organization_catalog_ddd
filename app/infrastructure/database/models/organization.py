@@ -60,7 +60,7 @@ class OrganizationModel(TimedBaseModel):
     )
     building: Mapped[BuildingModel] = relationship("BuildingModel")
 
-    phones: Mapped[List[OrganizationPhoneModel]] = relationship(
+    phones: Mapped[list[OrganizationPhoneModel]] = relationship(
         "OrganizationPhoneModel",
         back_populates="organization",
         cascade="all, delete-orphan",

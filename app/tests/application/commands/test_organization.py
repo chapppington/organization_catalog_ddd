@@ -14,7 +14,7 @@ from domain.organization.exceptions import (
 from domain.organization.interfaces.repositories.organization import BaseOrganizationRepository
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_command_success(
     organization_repository: BaseOrganizationRepository,
     mediator: Mediator,
@@ -59,7 +59,7 @@ async def test_create_organization_command_success(
     assert saved_organization.oid == organization.oid
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_command_building_not_found(
     mediator: Mediator,
 ):
@@ -81,7 +81,7 @@ async def test_create_organization_command_building_not_found(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_command_activity_not_found(
     mediator: Mediator,
 ):
@@ -107,7 +107,7 @@ async def test_create_organization_command_activity_not_found(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_command_empty_name(
     mediator: Mediator,
 ):
@@ -138,7 +138,7 @@ async def test_create_organization_command_empty_name(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_command_invalid_phone(
     mediator: Mediator,
 ):
@@ -169,7 +169,7 @@ async def test_create_organization_command_invalid_phone(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_command_multiple_phones_and_activities(
     mediator: Mediator,
 ):
@@ -214,14 +214,12 @@ async def test_create_organization_command_multiple_phones_and_activities(
     assert "+7-923-666-1313" in phone_values
 
     # Проверяем деятельности
-    activity_names = [
-        activity.name.as_generic_type() for activity in organization.activities
-    ]
+    activity_names = [activity.name.as_generic_type() for activity in organization.activities]
     assert "Мясная продукция" in activity_names
     assert "Молочная продукция" in activity_names
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_organization_command_duplicate_name(
     mediator: Mediator,
 ):

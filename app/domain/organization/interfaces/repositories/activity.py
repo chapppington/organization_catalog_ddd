@@ -2,11 +2,9 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Iterable,
-)
+from typing import Any
 from uuid import UUID
 
 from domain.organization.entities import ActivityEntity

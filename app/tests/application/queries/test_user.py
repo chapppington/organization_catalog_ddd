@@ -6,7 +6,7 @@ from application.queries.user import AuthenticateUserQuery
 from domain.user.exceptions import InvalidCredentialsException
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_authenticate_user_query_success(mediator: Mediator):
     """Тест успешной аутентификации пользователя."""
     username = "testuser"
@@ -33,7 +33,7 @@ async def test_authenticate_user_query_success(mediator: Mediator):
     assert authenticated_user.username.value == username
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_authenticate_user_query_invalid_password(mediator: Mediator):
     """Тест аутентификации с неверным паролем."""
     username = "testuser"
@@ -58,7 +58,7 @@ async def test_authenticate_user_query_invalid_password(mediator: Mediator):
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_authenticate_user_query_user_not_found(mediator: Mediator):
     """Тест аутентификации несуществующего пользователя."""
     username = "nonexistent"
@@ -74,7 +74,7 @@ async def test_authenticate_user_query_user_not_found(mediator: Mediator):
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_authenticate_user_query_case_insensitive_username(mediator: Mediator):
     """Тест аутентификации с username в разном регистре."""
     username = "TestUser"

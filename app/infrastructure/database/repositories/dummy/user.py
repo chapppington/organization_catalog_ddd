@@ -24,22 +24,14 @@ class DummyInMemoryUserRepository(BaseUserRepository):
     async def get_by_username(self, username: str) -> UserEntity | None:
         search_term = username.lower()
         try:
-            return next(
-                user
-                for user in self._saved_users
-                if user.username.as_generic_type().lower() == search_term
-            )
+            return next(user for user in self._saved_users if user.username.as_generic_type().lower() == search_term)
         except StopIteration:
             return None
 
     async def check_username_exists(self, username: str) -> bool:
         search_term = username.lower()
         try:
-            next(
-                user
-                for user in self._saved_users
-                if user.username.as_generic_type().lower() == search_term
-            )
+            next(user for user in self._saved_users if user.username.as_generic_type().lower() == search_term)
             return True
         except StopIteration:
             return False

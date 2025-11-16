@@ -8,7 +8,7 @@ repos:
         args: [--py36-plus]
 
 -   repo: https://github.com/myint/autoflake
-    rev: v2.2.1
+    rev: v2.3.1
     hooks:
     -   id: autoflake
         args: [
@@ -19,18 +19,18 @@ repos:
         ]
 
 -   repo: https://github.com/pycqa/isort
-    rev: 6.1.0
+    rev: 5.13.2
     hooks:
     -   id: isort
 
--  repo: https://github.com/PyCQA/docformatter
-   rev: v1.7.7
-   hooks:
-     - id: docformatter
-       args: [
-           --in-place,
-           --blank,
-       ]
+-   repo: https://github.com/PyCQA/docformatter
+    rev: v1.7.7
+    hooks:
+    -   id: docformatter
+        args: [
+            --in-place,
+            --blank,
+        ]
 
 -   repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.4.4
@@ -40,5 +40,10 @@ repos:
           --config=pyproject.toml,
           --line-length=120,
           --fix,
+        ]
+        exclude: .git|__pycache__
+      - id: ruff-format
+        args: [
+          --config=pyproject.toml,
         ]
         exclude: .git|__pycache__

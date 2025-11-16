@@ -9,7 +9,7 @@ from domain.user.exceptions import UserNotFoundException
 from domain.user.interfaces.repositories.api_key import BaseAPIKeyRepository
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_api_key_command_success(
     api_key_repository: BaseAPIKeyRepository,
     mediator: Mediator,
@@ -43,7 +43,7 @@ async def test_create_api_key_command_success(
     assert saved_api_key.user_id == user.oid
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_api_key_command_user_not_found(
     mediator: Mediator,
 ):
@@ -58,7 +58,7 @@ async def test_create_api_key_command_user_not_found(
         )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_api_key_command_multiple_keys(
     api_key_repository: BaseAPIKeyRepository,
     mediator: Mediator,

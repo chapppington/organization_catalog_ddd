@@ -14,7 +14,7 @@ from application.queries.organization import (
 )
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organization_by_id_query(mediator: Mediator):
     """Тест получения организации по ID."""
     # Создаем здание
@@ -49,7 +49,7 @@ async def test_get_organization_by_id_query(mediator: Mediator):
     assert result.name.as_generic_type() == "ООО Рога и Копыта"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organization_by_id_not_found(mediator: Mediator):
     """Тест получения несуществующей организации."""
     result = await mediator.handle_query(
@@ -59,7 +59,7 @@ async def test_get_organization_by_id_not_found(mediator: Mediator):
     assert result is None
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_search_organizations_by_name_query(mediator: Mediator):
     """Тест поиска организаций по названию."""
     # Создаем здание
@@ -113,7 +113,7 @@ async def test_search_organizations_by_name_query(mediator: Mediator):
     assert "ООО Рога Плюс" in names
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organizations_by_address_query(mediator: Mediator):
     """Тест получения организаций по адресу."""
     # Создаем два здания
@@ -189,7 +189,7 @@ async def test_get_organizations_by_address_query(mediator: Mediator):
     assert "ООО Пушкина" not in names
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organizations_by_activity_query(mediator: Mediator):
     """Тест получения организаций по виду деятельности (включая вложенные)"""
     # Создаем здание
@@ -252,7 +252,7 @@ async def test_get_organizations_by_activity_query(mediator: Mediator):
     assert "ООО Молочный завод" in names
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organizations_by_radius_query(mediator: Mediator):
     """Тест получения организаций в радиусе от точки."""
     # Создаем здания на разном расстоянии
@@ -310,7 +310,7 @@ async def test_get_organizations_by_radius_query(mediator: Mediator):
     assert results_list[0].name.as_generic_type() == "ООО В центре"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_organizations_by_rectangle_query(mediator: Mediator):
     """Тест получения организаций в прямоугольной области."""
     # Создаем здания в разных точках
@@ -385,7 +385,7 @@ async def test_get_organizations_by_rectangle_query(mediator: Mediator):
     assert "ООО Точка 2" in names
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_search_organizations_pagination(mediator: Mediator):
     """Тест пагинации при поиске организаций."""
     # Создаем здание

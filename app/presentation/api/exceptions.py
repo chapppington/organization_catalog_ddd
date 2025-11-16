@@ -26,9 +26,7 @@ async def application_exception_handler(
     exception_name = exc.__class__.__name__
 
     # Определяем статус код на основе типа исключения
-    if isinstance(exc, InvalidCredentialsException):
-        status_code = status.HTTP_401_UNAUTHORIZED
-    elif isinstance(exc, APIKeyNotFoundException):
+    if isinstance(exc, APIKeyNotFoundException | InvalidCredentialsException):
         status_code = status.HTTP_401_UNAUTHORIZED
     elif isinstance(exc, APIKeyBannedException):
         status_code = status.HTTP_403_FORBIDDEN

@@ -1,8 +1,6 @@
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Iterable,
-)
+from typing import Any
 from uuid import UUID
 
 from infrastructure.database.converters.activity import (
@@ -42,11 +40,7 @@ class SQLAlchemyActivityRepository(BaseActivityRepository):
 
     async def get_by_name(self, name: str) -> ActivityEntity | None:
         async with self.database.get_read_only_session() as session:
-            stmt = (
-                select(ActivityModel)
-                .where(ActivityModel.name == name)
-                .options(selectinload(ActivityModel.parent))
-            )
+            stmt = select(ActivityModel).where(ActivityModel.name == name).options(selectinload(ActivityModel.parent))
             res = await session.execute(stmt)
             result = res.scalar_one_or_none()
 

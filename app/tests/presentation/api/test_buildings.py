@@ -11,7 +11,7 @@ from faker import Faker
 from httpx import Response
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_building_success(
     app: FastAPI,
     client: TestClient,
@@ -40,7 +40,7 @@ async def test_create_building_success(
     assert json_data["data"]["longitude"] == longitude
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_building_fail_address_too_long(
     app: FastAPI,
     client: TestClient,
@@ -67,7 +67,7 @@ async def test_create_building_fail_address_too_long(
     assert json_data["errors"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_create_building_fail_address_empty(
     app: FastAPI,
     client: TestClient,
@@ -92,7 +92,7 @@ async def test_create_building_fail_address_empty(
     assert json_data["errors"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_id_success(
     app: FastAPI,
     client: TestClient,
@@ -131,7 +131,7 @@ async def test_get_building_by_id_success(
     assert "updated_at" in json_data["data"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_id_not_found(
     app: FastAPI,
     client: TestClient,
@@ -148,7 +148,7 @@ async def test_get_building_by_id_not_found(
     assert any("not found" in error["message"].lower() for error in json_data["errors"])
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_address_success(
     app: FastAPI,
     client: TestClient,
@@ -191,7 +191,7 @@ async def test_get_building_by_address_success(
     assert "updated_at" in json_data["data"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_building_by_address_not_found(
     app: FastAPI,
     client: TestClient,

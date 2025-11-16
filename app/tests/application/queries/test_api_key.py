@@ -9,7 +9,7 @@ from application.queries.api_key import GetAPIKeyByKeyQuery
 from domain.user.exceptions import APIKeyNotFoundException
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_api_key_by_key_query_success(mediator: Mediator):
     """Тест успешного получения API ключа по ключу."""
     # Создаем пользователя
@@ -38,7 +38,7 @@ async def test_get_api_key_by_key_query_success(mediator: Mediator):
     assert result.user.oid == user.oid
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_get_api_key_by_key_query_not_found(mediator: Mediator):
     """Тест получения несуществующего API ключа."""
     non_existent_key = uuid4()
