@@ -36,6 +36,11 @@ pytest = "^8.4.2"
 faker = "^37.12.0"
 pytest-asyncio = "^1.2.0"
 
+[tool.ruff]
+exclude = [
+    "**/migrations/**",
+]
+
 [tool.ruff.lint]
 ignore = ["I"]
 

@@ -1,5 +1,3 @@
-import os
-
 from punq import Container
 from pytest import fixture
 
@@ -11,10 +9,6 @@ from domain.user.interfaces.repositories.api_key import BaseAPIKeyRepository
 from domain.user.interfaces.repositories.user import BaseUserRepository
 from settings.config import Config
 from tests.fixtures import init_dummy_container
-
-
-# Set required environment variables before any imports that might use config
-os.environ.setdefault("JWT_SECRET_KEY", "test-secret-key-for-testing-only")
 
 
 @fixture(scope="function")
