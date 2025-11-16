@@ -5,117 +5,40 @@ from fastapi import (
     status,
 )
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import ORJSONResponse
 
 from authx.exceptions import AuthXException
 from presentation.api.schemas import ApiResponse
 
-from application.exceptions.activity import ActivityNotFoundException
-from application.exceptions.base import LogicException
-from application.exceptions.building import BuildingNotFoundException
-from application.exceptions.organization import OrganizationNotFoundException
-from domain.organization.exceptions import (
-    ActivityNotFoundException as DomainActivityNotFoundException,
-    BuildingNotFoundException as DomainBuildingNotFoundException,
-    OrganizationException,
-)
+from domain.base.exceptions import ApplicationException
 from domain.user.exceptions import (
+    APIKeyBannedException,
+    APIKeyNotFoundException,
     InvalidCredentialsException,
-    UserException,
 )
 
 
-async def logic_exception_handler(
+async def application_exception_handler(
     request: Request,
-    exc: LogicException,
-) -> JSONResponse:
-    """Обработчик для логических исключений приложения."""
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=ApiResponse(
-            data={},
-            errors=[{"message": exc.message}],
-        ).model_dump(),
-    )
+    exc: ApplicationException,
+) -> ORJSONResponse:
+    """Общий обработчик для всех исключений приложения."""
+    exception_name = exc.__class__.__name__
 
+    # Определяем статус код на основе типа исключения
+    if isinstance(exc, InvalidCredentialsException):
+        status_code = status.HTTP_401_UNAUTHORIZED
+    elif isinstance(exc, APIKeyNotFoundException):
+        status_code = status.HTTP_401_UNAUTHORIZED
+    elif isinstance(exc, APIKeyBannedException):
+        status_code = status.HTTP_403_FORBIDDEN
+    elif "NotFound" in exception_name:
+        status_code = status.HTTP_404_NOT_FOUND
+    else:
+        status_code = status.HTTP_400_BAD_REQUEST
 
-async def activity_not_found_handler(
-    request: Request,
-    exc: ActivityNotFoundException | DomainActivityNotFoundException,
-) -> JSONResponse:
-    """Обработчик для случая, когда активность не найдена."""
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content=ApiResponse(
-            data={},
-            errors=[{"message": exc.message}],
-        ).model_dump(),
-    )
-
-
-async def building_not_found_handler(
-    request: Request,
-    exc: BuildingNotFoundException | DomainBuildingNotFoundException,
-) -> JSONResponse:
-    """Обработчик для случая, когда здание не найдено."""
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content=ApiResponse(
-            data={},
-            errors=[{"message": exc.message}],
-        ).model_dump(),
-    )
-
-
-async def organization_not_found_handler(
-    request: Request,
-    exc: OrganizationNotFoundException,
-) -> JSONResponse:
-    """Обработчик для случая, когда организация не найдена."""
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content=ApiResponse(
-            data={},
-            errors=[{"message": exc.message}],
-        ).model_dump(),
-    )
-
-
-async def organization_exception_handler(
-    request: Request,
-    exc: OrganizationException,
-) -> JSONResponse:
-    """Обработчик для доменных исключений организации."""
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=ApiResponse(
-            data={},
-            errors=[{"message": exc.message}],
-        ).model_dump(),
-    )
-
-
-async def invalid_credentials_handler(
-    request: Request,
-    exc: InvalidCredentialsException,
-) -> JSONResponse:
-    """Обработчик для неверных учетных данных."""
-    return JSONResponse(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        content=ApiResponse(
-            data={},
-            errors=[{"message": exc.message}],
-        ).model_dump(),
-    )
-
-
-async def user_exception_handler(
-    request: Request,
-    exc: UserException,
-) -> JSONResponse:
-    """Обработчик для доменных исключений пользователя."""
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+    return ORJSONResponse(
+        status_code=status_code,
         content=ApiResponse(
             data={},
             errors=[{"message": exc.message}],
@@ -126,9 +49,9 @@ async def user_exception_handler(
 async def authx_exception_handler(
     request: Request,
     exc: AuthXException,
-) -> JSONResponse:
+) -> ORJSONResponse:
     """Обработчик для исключений authx (отсутствие/невалидность токена)."""
-    return JSONResponse(
+    return ORJSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content=ApiResponse(
             data={},
@@ -140,13 +63,7 @@ async def authx_exception_handler(
 async def api_key_authentication_handler(
     request: Request,
     exc: HTTPException,
-) -> JSONResponse:
-    """Обработчик для ошибок аутентификации API ключа.
-
-    Обрабатывает HTTPException с кодами 401/403 и форматирует их в
-    ApiResponse.
-
-    """
+) -> ORJSONResponse:
     # Обрабатываем только ошибки аутентификации/авторизации
     if exc.status_code in (status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN):
         error_message = exc.detail
@@ -154,7 +71,7 @@ async def api_key_authentication_handler(
         if error_message == "Not authenticated" or "Not authenticated" in error_message:
             error_message = "API key is required"
 
-        return JSONResponse(
+        return ORJSONResponse(
             status_code=exc.status_code,
             content=ApiResponse(
                 data={},
@@ -163,7 +80,7 @@ async def api_key_authentication_handler(
         )
 
     # Для других HTTPException возвращаем стандартный формат
-    return JSONResponse(
+    return ORJSONResponse(
         status_code=exc.status_code,
         content=ApiResponse(
             data={},
@@ -175,12 +92,7 @@ async def api_key_authentication_handler(
 async def validation_error_handler(
     request: Request,
     exc: RequestValidationError,
-) -> JSONResponse:
-    """Обработчик для ошибок валидации (422 Unprocessable Entity).
-
-    Форматирует ошибки валидации FastAPI/Pydantic в формат ApiResponse.
-
-    """
+) -> ORJSONResponse:
     errors = []
 
     # Обрабатываем ошибки валидации
@@ -206,7 +118,7 @@ async def validation_error_handler(
             },
         )
 
-    return JSONResponse(
+    return ORJSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
         content=ApiResponse(
             data={},
@@ -217,31 +129,8 @@ async def validation_error_handler(
 
 def setup_exception_handlers(app: FastAPI) -> None:
     """Настраивает обработчики исключений для FastAPI приложения."""
-    # Регистрируем обработчик для логических исключений приложения
-    app.add_exception_handler(LogicException, logic_exception_handler)
-
-    # Обработчик для доменных исключений организации (возвращают 400)
-    app.add_exception_handler(OrganizationException, organization_exception_handler)
-
-    # Специфичные обработчики для NotFound исключений (возвращают 404)
-    app.add_exception_handler(ActivityNotFoundException, activity_not_found_handler)
-    app.add_exception_handler(
-        DomainActivityNotFoundException,
-        activity_not_found_handler,
-    )
-    app.add_exception_handler(BuildingNotFoundException, building_not_found_handler)
-    app.add_exception_handler(
-        DomainBuildingNotFoundException,
-        building_not_found_handler,
-    )
-    app.add_exception_handler(
-        OrganizationNotFoundException,
-        organization_not_found_handler,
-    )
-
-    # Обработчики для исключений пользователей
-    app.add_exception_handler(InvalidCredentialsException, invalid_credentials_handler)
-    app.add_exception_handler(UserException, user_exception_handler)
+    # Общий обработчик для всех исключений приложения
+    app.add_exception_handler(ApplicationException, application_exception_handler)
 
     # Обработчик для исключений authx
     app.add_exception_handler(AuthXException, authx_exception_handler)

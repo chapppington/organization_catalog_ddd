@@ -3,6 +3,7 @@ from uuid import UUID
 from fastapi import (
     Depends,
     HTTPException,
+    Request,
     status,
 )
 from fastapi.security import (
@@ -10,11 +11,12 @@ from fastapi.security import (
     HTTPBearer,
 )
 
+from presentation.api.auth import auth_service
+
 from application.init import init_container
 from application.mediator import Mediator
 from application.queries.api_key import GetAPIKeyByKeyQuery
 from domain.user.entities import APIKeyEntity
-from domain.user.exceptions import APIKeyNotFoundException
 
 
 security = HTTPBearer(
@@ -23,52 +25,34 @@ security = HTTPBearer(
 )
 
 
+async def get_refresh_token_payload(
+    request: Request,
+) -> dict:
+    """Dependency для получения payload из refresh токена."""
+    return await auth_service.refresh_token_required(request)
+
+
+async def get_access_token_payload(
+    request: Request,
+) -> dict:
+    """Dependency для получения payload из access токена."""
+    return await auth_service.access_token_required(request)
+
+
 async def api_key_required(
     authorization: HTTPAuthorizationCredentials = Depends(security),
     container=Depends(init_container),
 ) -> APIKeyEntity:
-    """Dependency для защиты эндпоинтов API ключом.
+    """Dependency для защиты эндпоинтов API ключом."""
 
-    Ожидает API ключ в заголовке Authorization в формате: Bearer
-    <api_key>
-
-    """
     try:
-        # Парсим API ключ из заголовка Authorization
-        api_key_str = authorization.credentials
-
-        try:
-            api_key_uuid = UUID(api_key_str)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid API key format",
-            )
-
-        # Получаем API ключ через медиатор
-        mediator: Mediator = container.resolve(Mediator)
-        query = GetAPIKeyByKeyQuery(key=api_key_uuid)
-
-        try:
-            api_key = await mediator.handle_query(query)
-        except APIKeyNotFoundException:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="API key not found",
-            )
-
-        # Проверяем, не забанен ли ключ (это уже проверяется в сервисе)
-        if api_key.banned_at:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="API key is banned",
-            )
-
-        return api_key
-    except HTTPException:
-        raise
-    except Exception as e:
+        api_key_uuid = UUID(authorization.credentials)
+    except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Invalid API key: {str(e)}",
+            detail="Invalid API key format",
         )
+
+    mediator: Mediator = container.resolve(Mediator)
+    query = GetAPIKeyByKeyQuery(key=api_key_uuid)
+    return await mediator.handle_query(query)

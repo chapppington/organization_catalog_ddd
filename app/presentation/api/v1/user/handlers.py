@@ -3,13 +3,15 @@ from uuid import UUID
 from fastapi import (
     APIRouter,
     Depends,
-    HTTPException,
-    Request,
     Response,
     status,
 )
 
 from presentation.api.auth import auth_service
+from presentation.api.dependencies import (
+    get_access_token_payload,
+    get_refresh_token_payload,
+)
 from presentation.api.schemas import (
     ApiResponse,
     ErrorSchema,
@@ -114,37 +116,27 @@ async def login(
     },
 )
 async def refresh_token(
-    request: Request,
     response: Response,
+    refresh_payload: dict = Depends(get_refresh_token_payload),
 ) -> ApiResponse[RefreshTokenResponseSchema]:
     """Обновление access токена с помощью refresh токена из cookies."""
-    try:
-        # Получаем refresh токен из cookies
-        refresh_payload = await auth_service.refresh_token_required(request)
+    # Создаем новый access токен
+    access_token = auth_service.create_access_token(refresh_payload["sub"])
 
-        # Создаем новый access токен
-        access_token = auth_service.create_access_token(refresh_payload.sub)
+    # Устанавливаем новый access токен в cookie
+    auth_service.set_access_cookies(token=access_token, response=response)
 
-        # Устанавливаем новый access токен в cookie
-        auth_service.set_access_cookies(token=access_token, response=response)
-
-        return ApiResponse[RefreshTokenResponseSchema](
-            data=RefreshTokenResponseSchema(
-                access_token=access_token,
-            ),
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e),
-        )
+    return ApiResponse[RefreshTokenResponseSchema](
+        data=RefreshTokenResponseSchema(
+            access_token=access_token,
+        ),
+    )
 
 
 @router.post(
     "/api-key",
     status_code=status.HTTP_201_CREATED,
     response_model=ApiResponse[APIKeyResponseSchema],
-    dependencies=[Depends(auth_service.access_token_required)],
     responses={
         status.HTTP_201_CREATED: {"model": ApiResponse[APIKeyResponseSchema]},
         status.HTTP_400_BAD_REQUEST: {"model": ErrorSchema},
@@ -152,21 +144,12 @@ async def refresh_token(
     },
 )
 async def create_api_key(
-    request: Request,
+    token_payload: dict = Depends(get_access_token_payload),
     container=Depends(init_container),
 ) -> ApiResponse[APIKeyResponseSchema]:
-    """Создание API ключа для текущего пользователя.
+    """Создание API ключа для текущего пользователя."""
+    user_id = UUID(token_payload["sub"])
 
-    Требует аутентификации через access token.
-
-    """
-    # Получаем payload из токена
-    token_payload = await auth_service.access_token_required(request)
-
-    # Извлекаем user_id из токена (он хранится в sub)
-    user_id = UUID(token_payload.sub)
-
-    # Создаем API ключ
     mediator: Mediator = container.resolve(Mediator)
     command = CreateAPIKeyCommand(user_id=user_id)
     results = await mediator.handle_command(command)
