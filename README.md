@@ -180,7 +180,7 @@ domain/
 
 - `ActivityNameValueObject` — имя деятельности (не пустое, макс. 255 символов)
 - `BuildingAddressValueObject` — адрес здания (не пустой, макс. 255 символов)
-- `BuildingCoordinatesValueObject` — координаты здания (PostGIS Point)
+- `BuildingCoordinatesValueObject` — координаты здания
 - `OrganizationNameValueObject` — название организации (не пустое)
 - `OrganizationPhoneValueObject` — телефон (10-15 цифр)
 - `UsernameValueObject` — имя пользователя (мин. 3 символа, макс. 255, буквы/цифры/подчеркивания)
