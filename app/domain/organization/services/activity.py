@@ -1,4 +1,8 @@
 from dataclasses import dataclass
+from typing import (
+    Iterable,
+    Tuple,
+)
 from uuid import UUID
 
 from application.exceptions.activity import ActivityWithThatNameAlreadyExistsException
@@ -36,3 +40,31 @@ class ActivityService:
         )
         await self.activity_repository.add(activity)
         return activity
+
+    async def get_activity_by_id(
+        self,
+        activity_id: UUID,
+    ) -> ActivityEntity | None:
+        """Получить активность по ID."""
+        return await self.activity_repository.get_by_id(activity_id)
+
+    async def get_activities(
+        self,
+        name: str | None = None,
+        parent_id: UUID | None = None,
+        limit: int = 10,
+        offset: int = 0,
+    ) -> Tuple[Iterable[ActivityEntity], int]:
+        """Получить список активностей с фильтрацией и пагинацией."""
+        filters_dict = {}
+        if name is not None:
+            filters_dict["name"] = name
+        if parent_id is not None:
+            filters_dict["parent_id"] = parent_id
+
+        activities = list(await self.activity_repository.filter(**filters_dict))
+        total = len(activities)
+
+        paginated_activities = activities[offset : offset + limit]
+
+        return paginated_activities, total

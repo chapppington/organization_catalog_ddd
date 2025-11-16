@@ -16,7 +16,6 @@ def create_app() -> FastAPI:
         debug=True,
     )
 
-    # Инициализация логирования
     setup_logging(config)
 
     setup_exception_handlers(app)

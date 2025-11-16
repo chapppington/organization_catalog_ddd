@@ -6,7 +6,7 @@ from application.queries.base import (
     BaseQueryHandler,
 )
 from domain.organization.entities import BuildingEntity
-from domain.organization.interfaces.repositories.building import BaseBuildingRepository
+from domain.organization.services.building import BuildingService
 
 
 @dataclass(frozen=True)
@@ -23,23 +23,23 @@ class GetBuildingByAddressQuery(BaseQuery):
 class GetBuildingByIdQueryHandler(
     BaseQueryHandler[GetBuildingByIdQuery, BuildingEntity | None],
 ):
-    building_repository: BaseBuildingRepository
+    building_service: BuildingService
 
     async def handle(
         self,
         query: GetBuildingByIdQuery,
     ) -> BuildingEntity | None:
-        return await self.building_repository.get_by_id(query.building_id)
+        return await self.building_service.get_building_by_id(query.building_id)
 
 
 @dataclass(frozen=True)
 class GetBuildingByAddressQueryHandler(
     BaseQueryHandler[GetBuildingByAddressQuery, BuildingEntity | None],
 ):
-    building_repository: BaseBuildingRepository
+    building_service: BuildingService
 
     async def handle(
         self,
         query: GetBuildingByAddressQuery,
     ) -> BuildingEntity | None:
-        return await self.building_repository.get_by_address(query.address)
+        return await self.building_service.get_building_by_address(query.address)

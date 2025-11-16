@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from uuid import UUID
 
 from domain.organization.entities import BuildingEntity
 from domain.organization.interfaces.repositories import BaseBuildingRepository
@@ -27,3 +28,15 @@ class BuildingService:
         )
         await self.building_repository.add(building)
         return building
+
+    async def get_building_by_id(
+        self,
+        building_id: UUID,
+    ) -> BuildingEntity:
+        return await self.building_repository.get_by_id(building_id)
+
+    async def get_building_by_address(
+        self,
+        address: str,
+    ) -> BuildingEntity:
+        return await self.building_repository.get_by_address(address)

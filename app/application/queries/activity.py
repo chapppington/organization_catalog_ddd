@@ -10,7 +10,7 @@ from application.queries.base import (
     BaseQueryHandler,
 )
 from domain.organization.entities import ActivityEntity
-from domain.organization.interfaces.repositories.activity import BaseActivityRepository
+from domain.organization.services.activity import ActivityService
 
 
 @dataclass(frozen=True)
@@ -30,13 +30,13 @@ class GetActivitiesQuery(BaseQuery):
 class GetActivityByIdQueryHandler(
     BaseQueryHandler[GetActivityByIdQuery, ActivityEntity | None],
 ):
-    activity_repository: BaseActivityRepository
+    activity_service: ActivityService
 
     async def handle(
         self,
         query: GetActivityByIdQuery,
     ) -> ActivityEntity | None:
-        return await self.activity_repository.get_by_id(query.activity_id)
+        return await self.activity_service.get_activity_by_id(query.activity_id)
 
 
 @dataclass(frozen=True)
@@ -46,21 +46,15 @@ class GetActivitiesQueryHandler(
         Tuple[Iterable[ActivityEntity], int],
     ],
 ):
-    activity_repository: BaseActivityRepository
+    activity_service: ActivityService
 
     async def handle(
         self,
         query: GetActivitiesQuery,
     ) -> Tuple[Iterable[ActivityEntity], int]:
-        filters_dict = {}
-        if query.name is not None:
-            filters_dict["name"] = query.name
-        if query.parent_id is not None:
-            filters_dict["parent_id"] = query.parent_id
-
-        activities = list(await self.activity_repository.filter(**filters_dict))
-        total = len(activities)
-
-        paginated_activities = activities[query.offset : query.offset + query.limit]
-
-        return paginated_activities, total
+        return await self.activity_service.get_activities(
+            name=query.name,
+            parent_id=query.parent_id,
+            limit=query.limit,
+            offset=query.offset,
+        )
