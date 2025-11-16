@@ -41,6 +41,7 @@ class Config(BaseSettings):
 
     jwt_secret_key: str = Field(
         alias="JWT_SECRET_KEY",
+        default="secret-key",
     )
 
     logstash_host: str = Field(
