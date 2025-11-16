@@ -1,6 +1,6 @@
 # Organization Catalog DDD
 
-![Coverage](https://img.shields.io/badge/coverage%20(139%20tests)-90%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage%20(141%20tests)-90%25-brightgreen)
 
 REST API приложение для справочника организаций, зданий и видов деятельности, построенное на принципах Domain-Driven Design. Работа с геоданными через PostGIS
 
