@@ -16,11 +16,14 @@ git clean -fd
 
 [ ! -f .env ] && { echo "❌ .env file not found!"; exit 1; }
 
-echo "🛑 Stopping containers..."
-make all-down || true
+echo "🛑 Stopping app container (storages will remain running)..."
+make app-down || true
 
-echo "🔨 Building and starting containers..."
-make all
+echo "🔨 Ensuring storages are running..."
+make storages || true
+
+echo "🔨 Building and starting app container..."
+make app-up
 
 DB_USER=$(grep "^POSTGRES_USER=" .env | cut -d'=' -f2 | xargs || echo "postgres")
 

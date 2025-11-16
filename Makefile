@@ -28,7 +28,11 @@ app-shell:
 
 .PHONY: app-down
 app-down:
-	${DC} -f ${APP_FILE} down
+	${DC} -f ${APP_FILE} ${ENV} down
+
+.PHONY: app-up
+app-up:
+	${DC} -f ${STORAGES_FILE} -f ${APP_FILE} ${ENV} up --build -d main-app
 
 
 .PHONY: storages
