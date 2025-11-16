@@ -59,6 +59,26 @@ class Config(BaseSettings):
         alias="LOGSTASH_PROJECT",
     )
 
+    cors_origins: list[str] = Field(
+        default=["*"],
+        alias="CORS_ORIGINS",
+    )
+
+    cors_allow_credentials: bool = Field(
+        default=True,
+        alias="CORS_ALLOW_CREDENTIALS",
+    )
+
+    cors_allow_methods: list[str] = Field(
+        default=["*"],
+        alias="CORS_ALLOW_METHODS",
+    )
+
+    cors_allow_headers: list[str] = Field(
+        default=["*"],
+        alias="CORS_ALLOW_HEADERS",
+    )
+
     @computed_field
     @property
     def postgres_connection_uri(self) -> str:
