@@ -4,9 +4,7 @@ from pytest import fixture
 from application.mediator import Mediator
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
-from domain.organization.interfaces.repositories.organization import (
-    BaseOrganizationRepository,
-)
+from domain.organization.interfaces.repositories.organization import BaseOrganizationRepository
 from domain.user.interfaces.repositories.api_key import BaseAPIKeyRepository
 from domain.user.interfaces.repositories.user import BaseUserRepository
 from settings.config import Config

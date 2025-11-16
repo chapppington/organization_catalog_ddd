@@ -7,17 +7,6 @@ from fastapi import (
     status,
 )
 
-from application.commands.organization import CreateOrganizationCommand
-from application.init import init_container
-from application.mediator import Mediator
-from application.queries.organization import (
-    GetOrganizationByIdQuery,
-    GetOrganizationsByActivityQuery,
-    GetOrganizationsByAddressQuery,
-    GetOrganizationsByNameQuery,
-    GetOrganizationsByRadiusQuery,
-    GetOrganizationsByRectangleQuery,
-)
 from presentation.api.filters import (
     PaginationIn,
     PaginationOut,
@@ -30,6 +19,18 @@ from presentation.api.schemas import (
 from presentation.api.v1.organization.schemas import (
     CreateOrganizationRequestSchema,
     OrganizationDetailSchema,
+)
+
+from application.commands.organization import CreateOrganizationCommand
+from application.init import init_container
+from application.mediator import Mediator
+from application.queries.organization import (
+    GetOrganizationByIdQuery,
+    GetOrganizationsByActivityQuery,
+    GetOrganizationsByAddressQuery,
+    GetOrganizationsByNameQuery,
+    GetOrganizationsByRadiusQuery,
+    GetOrganizationsByRectangleQuery,
 )
 
 

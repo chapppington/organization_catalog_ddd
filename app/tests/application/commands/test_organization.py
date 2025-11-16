@@ -3,6 +3,7 @@ import pytest
 from application.commands.activity import CreateActivityCommand
 from application.commands.building import CreateBuildingCommand
 from application.commands.organization import CreateOrganizationCommand
+from application.exceptions.organization import OrganizationWithThatNameAlreadyExistsException
 from application.mediator import Mediator
 from domain.organization.exceptions import (
     ActivityNotFoundException,
@@ -10,9 +11,7 @@ from domain.organization.exceptions import (
     EmptyOrganizationNameException,
     EmptyOrganizationPhoneException,
 )
-from domain.organization.interfaces.repositories.organization import (
-    BaseOrganizationRepository,
-)
+from domain.organization.interfaces.repositories.organization import BaseOrganizationRepository
 
 
 @pytest.mark.asyncio
@@ -220,3 +219,45 @@ async def test_create_organization_command_multiple_phones_and_activities(
     ]
     assert "Мясная продукция" in activity_names
     assert "Молочная продукция" in activity_names
+
+
+@pytest.mark.asyncio
+async def test_create_organization_command_duplicate_name(
+    mediator: Mediator,
+):
+    """Тест создания организации с дублирующимся названием."""
+    # Создаем здание
+    await mediator.handle_command(
+        CreateBuildingCommand(
+            address="г. Москва, ул. Ленина 1",
+            latitude=55.7558,
+            longitude=37.6173,
+        ),
+    )
+
+    # Создаем деятельность
+    await mediator.handle_command(
+        CreateActivityCommand(name="Еда", parent_id=None),
+    )
+
+    name = "ООО Уникальное название"
+
+    organization, *_ = await mediator.handle_command(
+        CreateOrganizationCommand(
+            name=name,
+            address="г. Москва, ул. Ленина 1",
+            phones=["+7-495-123-4567"],
+            activities=["Еда"],
+        ),
+    )
+    assert organization is not None
+
+    with pytest.raises(OrganizationWithThatNameAlreadyExistsException):
+        await mediator.handle_command(
+            CreateOrganizationCommand(
+                name=name,
+                address="г. Москва, ул. Ленина 1",
+                phones=["+7-495-234-5678"],
+                activities=["Еда"],
+            ),
+        )

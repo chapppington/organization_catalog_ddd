@@ -1,72 +1,25 @@
-import math
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Iterable,
-)
+from typing import Iterable
 from uuid import UUID
 
+from infrastructure.database.converters.building import (
+    building_entity_to_model,
+    building_model_to_entity,
+)
+from infrastructure.database.gateways.postgres import Database
+from infrastructure.database.models.building import BuildingModel
 from sqlalchemy import (
     func,
-    literal,
     select,
 )
 
 from domain.organization.entities import BuildingEntity
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
-from infrastructure.database.converters.building import (
-    building_entity_to_model,
-    building_model_to_entity,
-)
-from infrastructure.database.models.building import BuildingModel
-from infrastructure.database.gateways.postgres import Database
 
 
 @dataclass
 class SQLAlchemyBuildingRepository(BaseBuildingRepository):
     database: Database
-
-    @staticmethod
-    def _haversine_distance_sql(
-        center_latitude: float,
-        center_longitude: float,
-    ) -> Any:
-        """Вычисляет SQL-выражение для расстояния по формуле Haversine.
-
-        Args:
-            center_latitude: Широта центральной точки
-            center_longitude: Долгота центральной точки
-
-        Returns:
-            SQL-выражение для вычисления расстояния в метрах
-
-        """
-        R = 6371000  # Радиус Земли в метрах
-
-        # Преобразуем в радианы
-        lat1_rad = math.radians(center_latitude)
-        lon1_rad = math.radians(center_longitude)
-
-        # Вычисляем расстояние для каждого здания
-        # Используем PostgreSQL функции: radians, sin, cos, acos
-        distance_expr = (
-            literal(R)
-            * func.acos(
-                func.least(
-                    literal(1.0),
-                    literal(math.sin(lat1_rad))
-                    * func.sin(func.radians(BuildingModel.latitude))
-                    + literal(math.cos(lat1_rad))
-                    * func.cos(func.radians(BuildingModel.latitude))
-                    * func.cos(
-                        func.radians(BuildingModel.longitude) - literal(lon1_rad),
-                    ),
-                ),
-            )
-            * literal(2)
-        )
-
-        return distance_expr
 
     async def add(self, building: BuildingEntity) -> None:
         async with self.database.get_session() as session:
@@ -90,64 +43,43 @@ class SQLAlchemyBuildingRepository(BaseBuildingRepository):
 
             return building_model_to_entity(result) if result else None
 
-    async def filter(self, **filters: Any) -> Iterable[BuildingEntity]:
+    async def filter_by_radius(
+        self,
+        latitude: float,
+        longitude: float,
+        radius_meters: float,
+    ) -> Iterable[BuildingEntity]:
         async with self.database.get_read_only_session() as session:
-            stmt = select(BuildingModel)
+            center_point_wkt = f"POINT({longitude} {latitude})"
+            center_point = func.ST_GeogFromText(center_point_wkt)
 
-            # Обработка географических параметров (радиус)
-            if (
-                "latitude" in filters
-                and "longitude" in filters
-                and "radius" in filters
-                and filters["latitude"] is not None
-                and filters["longitude"] is not None
-                and filters["radius"] is not None
-            ):
-                center_lat = filters["latitude"]
-                center_lon = filters["longitude"]
-                radius_meters = filters["radius"]
+            stmt = select(BuildingModel).where(
+                BuildingModel.location.ST_DWithin(center_point, radius_meters),
+            )
 
-                distance_expr = self._haversine_distance_sql(center_lat, center_lon)
-                stmt = stmt.where(distance_expr <= radius_meters)
+            res = await session.execute(stmt)
+            results = [building_model_to_entity(row[0]) for row in res.all()]
 
-            # Обработка прямоугольной области
-            elif (
-                "lat_min" in filters
-                and "lat_max" in filters
-                and "lon_min" in filters
-                and "lon_max" in filters
-                and filters["lat_min"] is not None
-                and filters["lat_max"] is not None
-                and filters["lon_min"] is not None
-                and filters["lon_max"] is not None
-            ):
-                stmt = stmt.where(
-                    BuildingModel.latitude >= filters["lat_min"],
-                    BuildingModel.latitude <= filters["lat_max"],
-                    BuildingModel.longitude >= filters["lon_min"],
-                    BuildingModel.longitude <= filters["lon_max"],
-                )
+            return results
 
-            # Обработка обычных полей модели
-            for field, value in filters.items():
-                # Пропускаем географические параметры, они уже обработаны выше
-                if field in (
-                    "latitude",
-                    "longitude",
-                    "radius",
-                    "lat_min",
-                    "lat_max",
-                    "lon_min",
-                    "lon_max",
-                ):
-                    continue
+    async def filter_by_bounding_box(
+        self,
+        lat_min: float,
+        lat_max: float,
+        lon_min: float,
+        lon_max: float,
+    ) -> Iterable[BuildingEntity]:
+        async with self.database.get_read_only_session() as session:
+            # 5 точек потому что полигон должен быть замкнутым (последняя точка должна быть такой же как первая)
+            bbox_wkt = (
+                f"POLYGON(({lon_min} {lat_min}, {lon_max} {lat_min}, "
+                f"{lon_max} {lat_max}, {lon_min} {lat_max}, {lon_min} {lat_min}))"
+            )
+            bbox_geography = func.ST_GeogFromText(bbox_wkt)
 
-                try:
-                    field_obj = getattr(BuildingModel, field)
-                    stmt = stmt.where(field_obj == value)
-                except AttributeError:
-                    # Игнорируем неизвестные поля
-                    continue
+            stmt = select(BuildingModel).where(
+                BuildingModel.location.ST_Intersects(bbox_geography),
+            )
 
             res = await session.execute(stmt)
             results = [building_model_to_entity(row[0]) for row in res.all()]

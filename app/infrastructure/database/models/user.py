@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from infrastructure.database.models.base import TimedBaseModel
 from sqlalchemy import (
     ForeignKey,
     String,
@@ -14,8 +15,6 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from infrastructure.database.models.base import TimedBaseModel
-
 
 class UserModel(TimedBaseModel):
     __tablename__ = "user"
@@ -24,7 +23,6 @@ class UserModel(TimedBaseModel):
         String(255),
         nullable=False,
         unique=True,
-        index=True,
     )
     password: Mapped[str] = mapped_column(Text, nullable=False)
 
@@ -43,13 +41,11 @@ class APIKeyModel(TimedBaseModel):
         UUIDType(as_uuid=True),
         nullable=False,
         unique=True,
-        index=True,
     )
     user_id: Mapped[UUID] = mapped_column(
         UUIDType(as_uuid=True),
         ForeignKey("user.oid", ondelete="CASCADE"),
         nullable=False,
-        index=True,
     )
     last_used: Mapped[Optional[datetime]] = mapped_column(nullable=True)
     banned_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)

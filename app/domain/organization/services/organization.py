@@ -4,6 +4,7 @@ from typing import (
     Tuple,
 )
 
+from application.exceptions.organization import OrganizationWithThatNameAlreadyExistsException
 from domain.organization.entities import OrganizationEntity
 from domain.organization.exceptions import (
     ActivityNotFoundException,
@@ -33,6 +34,13 @@ class OrganizationService:
         phones: list[str],
         activities: list[str],
     ) -> OrganizationEntity:
+        existing_organization = await self.organization_repository.get_by_name(name)
+
+        if existing_organization:
+            raise OrganizationWithThatNameAlreadyExistsException(
+                name=name,
+            )
+
         building = await self.building_repository.get_by_address(address)
 
         if not building:
@@ -81,18 +89,15 @@ class OrganizationService:
         limit: int,
         offset: int,
     ) -> Tuple[Iterable[OrganizationEntity], int]:
-        buildings = await self.building_repository.filter(address=address)
-        buildings_list = list(buildings)
+        building = await self.building_repository.get_by_address(address)
 
-        if not buildings_list:
+        if not building:
             return [], 0
 
-        all_organizations = []
-        for building in buildings_list:
-            organizations = await self.organization_repository.filter(
-                building_id=building.oid,
-            )
-            all_organizations.extend(organizations)
+        organizations = await self.organization_repository.filter(
+            building_id=building.oid,
+        )
+        all_organizations = list(organizations)
 
         organizations_list = list(all_organizations)
         total = len(organizations_list)
@@ -151,10 +156,10 @@ class OrganizationService:
     ) -> Tuple[Iterable[OrganizationEntity], int]:
         """Список организаций в заданном радиусе относительно точки на
         карте."""
-        buildings = await self.building_repository.filter(
+        buildings = await self.building_repository.filter_by_radius(
             latitude=latitude,
             longitude=longitude,
-            radius=radius,
+            radius_meters=radius,
         )
 
         # Ищем организации в найденных зданиях
@@ -182,7 +187,7 @@ class OrganizationService:
     ) -> Tuple[Iterable[OrganizationEntity], int]:
         """Список организаций в прямоугольной области."""
 
-        buildings = await self.building_repository.filter(
+        buildings = await self.building_repository.filter_by_bounding_box(
             lat_min=lat_min,
             lat_max=lat_max,
             lon_min=lon_min,

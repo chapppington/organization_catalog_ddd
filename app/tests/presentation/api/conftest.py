@@ -1,50 +1,49 @@
 import asyncio
 
-import punq
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+import punq
 import pytest
+from presentation.api.main import create_app
 
 from application.commands.api_key import CreateAPIKeyCommand
 from application.commands.user import CreateUserCommand
 from application.init import init_container
 from application.mediator import Mediator
-from presentation.api.main import create_app
 from tests.fixtures import init_dummy_container
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def container() -> punq.Container:
-    """Создает один контейнер для всех тестов в модуле."""
+    """Создает контейнер для каждого теста."""
     return init_dummy_container()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def app(container: punq.Container) -> FastAPI:
-    """Создает одно приложение для всех тестов в модуле."""
+    """Создает приложение для каждого теста."""
     app = create_app()
     app.dependency_overrides[init_container] = lambda: container
 
     return app
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def client(app: FastAPI) -> TestClient:
-    """Создает один клиент для всех тестов в модуле."""
+    """Создает тестовый клиент для каждого теста."""
     return TestClient(app=app)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def mediator(container: punq.Container) -> Mediator:
-    """Создает медиатор из контейнера для всех тестов в модуле."""
+    """Создает медиатор из контейнера для каждого теста."""
     return container.resolve(Mediator)
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def api_key_headers(mediator: Mediator) -> dict[str, str]:
-    """Создает тестового пользователя и API ключ один раз для всех тестов в
-    модуле.
+    """Создает тестового пользователя и API ключ для каждого теста.
 
     Возвращает заголовки для использования в тестах.
 

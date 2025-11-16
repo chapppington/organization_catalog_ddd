@@ -4,6 +4,7 @@ from typing import (
 )
 from uuid import UUID
 
+from infrastructure.database.models.base import TimedBaseModel
 from sqlalchemy import (
     ForeignKey,
     String,
@@ -15,13 +16,11 @@ from sqlalchemy.orm import (
     relationship,
 )
 
-from infrastructure.database.models.base import TimedBaseModel
-
 
 class ActivityModel(TimedBaseModel):
     __tablename__ = "activity"
 
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     parent_id: Mapped[Optional[UUID]] = mapped_column(
         UUIDType(as_uuid=True),
         ForeignKey("activity.oid", ondelete="SET NULL"),

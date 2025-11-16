@@ -9,11 +9,6 @@ from fastapi import (
     status,
 )
 
-from application.commands.api_key import CreateAPIKeyCommand
-from application.commands.user import CreateUserCommand
-from application.init import init_container
-from application.mediator import Mediator
-from application.queries.user import AuthenticateUserQuery
 from presentation.api.auth import auth_service
 from presentation.api.schemas import (
     ApiResponse,
@@ -27,6 +22,12 @@ from presentation.api.v1.user.schemas import (
     TokenResponseSchema,
     UserResponseSchema,
 )
+
+from application.commands.api_key import CreateAPIKeyCommand
+from application.commands.user import CreateUserCommand
+from application.init import init_container
+from application.mediator import Mediator
+from application.queries.user import AuthenticateUserQuery
 
 
 router = APIRouter(prefix="/user", tags=["user"])

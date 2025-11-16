@@ -36,7 +36,7 @@ async def test_create_organization_success(
 
     # Создаем деятельность
     activity_url = app.url_path_for("create_activity")
-    activity_name = faker.text()[:50]
+    activity_name = f"TestActivity_{faker.uuid4()}"
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
@@ -90,7 +90,7 @@ async def test_create_organization_fail_name_empty(
 
     # Создаем деятельность
     activity_url = app.url_path_for("create_activity")
-    activity_name = faker.text()[:50]
+    activity_name = f"TestActivity_{faker.uuid4()}"
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
@@ -140,7 +140,7 @@ async def test_create_organization_fail_invalid_phone(
 
     # Создаем деятельность
     activity_url = app.url_path_for("create_activity")
-    activity_name = faker.text()[:50]
+    activity_name = f"TestActivity_{faker.uuid4()}"
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
@@ -191,7 +191,7 @@ async def test_create_organization_fail_empty_phone(
 
     # Создаем деятельность
     activity_url = app.url_path_for("create_activity")
-    activity_name = faker.text()[:50]
+    activity_name = f"TestActivity_{faker.uuid4()}"
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
@@ -242,7 +242,7 @@ async def test_get_organization_by_id_success(
 
     # Создаем деятельность
     activity_url = app.url_path_for("create_activity")
-    activity_name = faker.text()[:50]
+    activity_name = f"TestActivity_{faker.uuid4()}"
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
@@ -326,7 +326,7 @@ async def test_get_organizations_by_name_success(
 
     # Создаем деятельность
     activity_url = app.url_path_for("create_activity")
-    activity_name = faker.text()[:50]
+    activity_name = f"TestActivity_{faker.uuid4()}"
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
@@ -394,7 +394,7 @@ async def test_get_organizations_by_address_success(
 
     # Создаем деятельность
     activity_url = app.url_path_for("create_activity")
-    activity_name = faker.text()[:50]
+    activity_name = f"TestActivity_{faker.uuid4()}"
     activity_response: Response = client.post(
         url=activity_url,
         json={"name": activity_name},
@@ -436,3 +436,72 @@ async def test_get_organizations_by_address_success(
     assert "pagination" in json_data["data"]
     assert len(json_data["data"]["items"]) >= len(created_ids)
     assert json_data["data"]["pagination"]["total"] >= len(created_ids)
+
+
+@pytest.mark.asyncio
+async def test_create_organization_fail_duplicate_name(
+    app: FastAPI,
+    client: TestClient,
+    faker: Faker,
+    api_key_headers: dict[str, str],
+):
+    """Тест создания организации с дублирующимся названием."""
+    # Создаем здание
+    building_url = app.url_path_for("create_building")
+    address = faker.address()[:100]
+    building_response: Response = client.post(
+        url=building_url,
+        json={
+            "address": address,
+            "latitude": 55.7558,
+            "longitude": 37.6173,
+        },
+        headers=api_key_headers,
+    )
+    assert building_response.is_success
+
+    # Создаем деятельность
+    activity_url = app.url_path_for("create_activity")
+    activity_name = f"TestActivity_{faker.uuid4()}"
+    activity_response: Response = client.post(
+        url=activity_url,
+        json={"name": activity_name},
+        headers=api_key_headers,
+    )
+    assert activity_response.is_success
+
+    # Создаем организацию
+    url = app.url_path_for("create_organization")
+    name = f"TestOrg_{faker.uuid4()}"
+
+    create_response: Response = client.post(
+        url=url,
+        json={
+            "name": name,
+            "address": address,
+            "phones": ["+7-495-123-4567"],
+            "activities": [activity_name],
+        },
+        headers=api_key_headers,
+    )
+    assert create_response.is_success
+
+    # Пытаемся создать организацию с тем же названием
+    duplicate_response: Response = client.post(
+        url=url,
+        json={
+            "name": name,
+            "address": address,
+            "phones": ["+7-495-234-5678"],
+            "activities": [activity_name],
+        },
+        headers=api_key_headers,
+    )
+
+    assert duplicate_response.status_code == status.HTTP_400_BAD_REQUEST
+    json_data = duplicate_response.json()
+
+    assert json_data["errors"]
+    assert any(
+        "already exists" in error["message"].lower() for error in json_data["errors"]
+    )

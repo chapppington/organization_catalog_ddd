@@ -8,6 +8,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from authx.exceptions import AuthXException
+from presentation.api.schemas import ApiResponse
 
 from application.exceptions.activity import ActivityNotFoundException
 from application.exceptions.base import LogicException
@@ -22,7 +23,6 @@ from domain.user.exceptions import (
     InvalidCredentialsException,
     UserException,
 )
-from presentation.api.schemas import ApiResponse
 
 
 async def logic_exception_handler(

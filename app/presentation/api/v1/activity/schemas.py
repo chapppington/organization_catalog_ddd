@@ -2,14 +2,17 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import (
+    BaseModel,
+    Field,
+)
 
 from domain.organization.entities import ActivityEntity
 
 
 class CreateActivityRequestSchema(BaseModel):
     name: str
-    parent_id: Optional[UUID] = None
+    parent_id: Optional[UUID] = Field(None, examples=[None])
 
 
 class ActivityResponseSchema(BaseModel):

@@ -19,6 +19,7 @@ class Database:
             pool_pre_ping=False,
             # echo=False,
             isolation_level="READ COMMITTED",
+            plugins=["geoalchemy2"],
         )
         self._async_session = async_sessionmaker[AsyncSession](
             bind=self._async_engine,
@@ -30,6 +31,7 @@ class Database:
             pool_pre_ping=False,
             # echo=False,
             isolation_level="AUTOCOMMIT",
+            plugins=["geoalchemy2"],
         )
         self._read_only_async_session = async_sessionmaker[AsyncSession](
             bind=self._read_only_async_engine,

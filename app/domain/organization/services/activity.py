@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from application.exceptions.activity import ActivityWithThatNameAlreadyExistsException
 from domain.organization.entities import ActivityEntity
 from domain.organization.exceptions import ActivityNotFoundException
 from domain.organization.interfaces.repositories import BaseActivityRepository
@@ -16,6 +17,13 @@ class ActivityService:
         name: str,
         parent_id: UUID | None = None,
     ) -> ActivityEntity:
+        existing_activity = await self.activity_repository.get_by_name(name)
+        if existing_activity:
+            raise ActivityWithThatNameAlreadyExistsException(
+                name=name,
+                parent_id=parent_id,
+            )
+
         parent = None
         if parent_id:
             parent = await self.activity_repository.get_by_id(parent_id)

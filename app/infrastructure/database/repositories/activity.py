@@ -5,17 +5,17 @@ from typing import (
 )
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-
-from domain.organization.entities import ActivityEntity
-from domain.organization.interfaces.repositories.activity import BaseActivityRepository
 from infrastructure.database.converters.activity import (
     activity_entity_to_model,
     activity_model_to_entity,
 )
 from infrastructure.database.gateways.postgres import Database
 from infrastructure.database.models.activity import ActivityModel
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+
+from domain.organization.entities import ActivityEntity
+from domain.organization.interfaces.repositories.activity import BaseActivityRepository
 
 
 @dataclass

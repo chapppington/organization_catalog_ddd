@@ -7,13 +7,6 @@ from fastapi import (
     status,
 )
 
-from application.commands.activity import CreateActivityCommand
-from application.init import init_container
-from application.mediator import Mediator
-from application.queries.activity import (
-    GetActivitiesQuery,
-    GetActivityByIdQuery,
-)
 from presentation.api.filters import (
     PaginationIn,
     PaginationOut,
@@ -27,6 +20,14 @@ from presentation.api.v1.activity.schemas import (
     ActivityDetailSchema,
     ActivityResponseSchema,
     CreateActivityRequestSchema,
+)
+
+from application.commands.activity import CreateActivityCommand
+from application.init import init_container
+from application.mediator import Mediator
+from application.queries.activity import (
+    GetActivitiesQuery,
+    GetActivityByIdQuery,
 )
 
 

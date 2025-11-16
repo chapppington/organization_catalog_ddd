@@ -1,6 +1,7 @@
+from infrastructure.database.models.activity import ActivityModel
+
 from domain.organization.entities import ActivityEntity
 from domain.organization.value_objects import ActivityNameValueObject
-from infrastructure.database.models.activity import ActivityModel
 
 
 def activity_entity_to_model(entity: ActivityEntity) -> ActivityModel:

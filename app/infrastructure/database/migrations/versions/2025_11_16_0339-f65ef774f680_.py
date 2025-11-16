@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: fb7754ae79bd
+Revision ID: f65ef774f680
 Revises:
-Create Date: 2025-11-05 02:24:47.945082
+Create Date: 2025-11-16 03:39:12.031823
 
 """
 
@@ -10,10 +10,11 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+import geoalchemy2
 
 
 # revision identifiers, used by Alembic.
-revision: str = "fb7754ae79bd"
+revision: str = "f65ef774f680"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -33,17 +34,24 @@ def upgrade() -> None:
         sa.Column(
             "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
-        sa.ForeignKeyConstraint(
-            ["parent_id"],
-            ["activity.oid"],
-        ),
+        sa.ForeignKeyConstraint(["parent_id"], ["activity.oid"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("oid"),
     )
     op.create_table(
         "building",
         sa.Column("address", sa.String(length=255), nullable=False),
-        sa.Column("latitude", sa.Float(), nullable=False),
-        sa.Column("longitude", sa.Float(), nullable=False),
+        sa.Column(
+            "location",
+            geoalchemy2.types.Geography(
+                geometry_type="POINT",
+                srid=4326,
+                dimension=2,
+                from_text="ST_GeogFromText",
+                name="geography",
+                nullable=False,
+            ),
+            nullable=False,
+        ),
         sa.Column("oid", sa.UUID(), nullable=False),
         sa.Column(
             "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
@@ -52,6 +60,43 @@ def upgrade() -> None:
             "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
         ),
         sa.PrimaryKeyConstraint("oid"),
+        sa.UniqueConstraint("address"),
+    )
+    op.execute(
+        sa.text(
+            "CREATE INDEX IF NOT EXISTS idx_building_location ON building USING gist (location)"
+        )
+    )
+    op.create_table(
+        "user",
+        sa.Column("username", sa.String(length=255), nullable=False),
+        sa.Column("password", sa.Text(), nullable=False),
+        sa.Column("oid", sa.UUID(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+        ),
+        sa.PrimaryKeyConstraint("oid"),
+        sa.UniqueConstraint("username"),
+    )
+    op.create_table(
+        "api_key",
+        sa.Column("key", sa.UUID(), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("last_used", sa.DateTime(), nullable=True),
+        sa.Column("banned_at", sa.DateTime(), nullable=True),
+        sa.Column("oid", sa.UUID(), nullable=False),
+        sa.Column(
+            "created_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(), server_default=sa.text("now()"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["user_id"], ["user.oid"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("oid"),
+        sa.UniqueConstraint("key"),
     )
     op.create_table(
         "organization",
@@ -102,6 +147,9 @@ def downgrade() -> None:
     op.drop_table("organization_phone")
     op.drop_table("organization_activity")
     op.drop_table("organization")
+    op.drop_table("api_key")
+    op.drop_table("user")
+    op.execute(sa.text("DROP INDEX IF EXISTS idx_building_location"))
     op.drop_table("building")
     op.drop_table("activity")
     # ### end Alembic commands ###

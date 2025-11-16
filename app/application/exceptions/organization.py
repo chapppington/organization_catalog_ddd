@@ -9,7 +9,7 @@ class OrganizationWithThatNameAlreadyExistsException(LogicException):
 
     @property
     def message(self):
-        return f'Organization with name "{self.name}" already exists.'
+        return f"Organization with name '{self.name}' already exists."
 
 
 @dataclass(eq=False)
@@ -19,12 +19,3 @@ class OrganizationNotFoundException(LogicException):
     @property
     def message(self):
         return "Organization with this ID not found."
-
-
-@dataclass(eq=False)
-class OrganizationIdAlreadyExistsException(LogicException):
-    organization_id: str
-
-    @property
-    def message(self):
-        return f"Organization with ID {self.organization_id} already exists."

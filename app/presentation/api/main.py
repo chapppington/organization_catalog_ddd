@@ -4,6 +4,7 @@ from infrastructure.logging.logger import setup_logging
 from presentation.api.exceptions import setup_exception_handlers
 from presentation.api.healthcheck import healthcheck_router
 from presentation.api.v1 import v1_router
+
 from settings import config
 
 

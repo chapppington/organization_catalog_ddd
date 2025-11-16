@@ -8,9 +8,7 @@ from typing import (
 )
 
 from domain.organization.entities import OrganizationEntity
-from domain.organization.interfaces.repositories.organization import (
-    BaseOrganizationRepository,
-)
+from domain.organization.interfaces.repositories.organization import BaseOrganizationRepository
 
 
 @dataclass
@@ -27,6 +25,17 @@ class DummyInMemoryOrganizationRepository(BaseOrganizationRepository):
         try:
             return next(
                 org for org in self._saved_organizations if org.oid == organization_id
+            )
+        except StopIteration:
+            return None
+
+    async def get_by_name(self, name: str) -> OrganizationEntity | None:
+        try:
+            search_term = name.lower()
+            return next(
+                org
+                for org in self._saved_organizations
+                if org.name.as_generic_type().lower() == search_term
             )
         except StopIteration:
             return None

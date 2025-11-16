@@ -1,19 +1,17 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from infrastructure.database.converters.user import (
+    api_key_entity_to_model,
+    api_key_model_to_entity,
+)
+from infrastructure.database.gateways.postgres import Database
+from infrastructure.database.models.user import APIKeyModel
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from domain.user.entities import APIKeyEntity
 from domain.user.interfaces.repositories.api_key import BaseAPIKeyRepository
-from infrastructure.database.converters.user import (
-    api_key_entity_to_model,
-    api_key_model_to_entity,
-)
-
-from infrastructure.database.models.user import APIKeyModel
-
-from infrastructure.database.gateways.postgres import Database
 
 
 @dataclass

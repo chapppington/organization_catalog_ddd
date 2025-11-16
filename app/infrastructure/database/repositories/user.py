@@ -1,16 +1,16 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from sqlalchemy import select
-
-from domain.user.entities import UserEntity
-from domain.user.interfaces.repositories.user import BaseUserRepository
 from infrastructure.database.converters.user import (
     user_entity_to_model,
     user_model_to_entity,
 )
 from infrastructure.database.gateways.postgres import Database
 from infrastructure.database.models.user import UserModel
+from sqlalchemy import select
+
+from domain.user.entities import UserEntity
+from domain.user.interfaces.repositories.user import BaseUserRepository
 
 
 @dataclass

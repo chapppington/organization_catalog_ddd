@@ -3,16 +3,17 @@ from uuid import (
     uuid4,
 )
 
-from domain.organization.entities import OrganizationEntity
-from domain.organization.value_objects import (
-    OrganizationNameValueObject,
-    OrganizationPhoneValueObject,
-)
 from infrastructure.database.converters.activity import activity_model_to_entity
 from infrastructure.database.converters.building import building_model_to_entity
 from infrastructure.database.models.organization import (
     OrganizationModel,
     OrganizationPhoneModel,
+)
+
+from domain.organization.entities import OrganizationEntity
+from domain.organization.value_objects import (
+    OrganizationNameValueObject,
+    OrganizationPhoneValueObject,
 )
 
 

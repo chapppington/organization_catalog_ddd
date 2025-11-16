@@ -4,12 +4,11 @@ from typing import (
     TypeVar,
 )
 
+from presentation.api.filters import PaginationOut
 from pydantic import (
     BaseModel,
     Field,
 )
-
-from presentation.api.filters import PaginationOut
 
 
 TData = TypeVar("TData")

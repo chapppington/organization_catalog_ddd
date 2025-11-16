@@ -1,6 +1,8 @@
 from typing import List
 from uuid import UUID
 
+from infrastructure.database.models.base import TimedBaseModel
+from infrastructure.database.models.building import BuildingModel
 from sqlalchemy import (
     Column,
     ForeignKey,
@@ -13,9 +15,6 @@ from sqlalchemy.orm import (
     mapped_column,
     relationship,
 )
-
-from infrastructure.database.models.base import TimedBaseModel
-from infrastructure.database.models.building import BuildingModel
 
 
 organization_activity = Table(
@@ -52,7 +51,7 @@ class OrganizationPhoneModel(TimedBaseModel):
 class OrganizationModel(TimedBaseModel):
     __tablename__ = "organization"
 
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
 
     building_id: Mapped[UUID] = mapped_column(
         UUIDType(as_uuid=True),

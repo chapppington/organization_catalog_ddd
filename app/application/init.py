@@ -1,5 +1,13 @@
 from functools import lru_cache
 
+from infrastructure.database.gateways.postgres import Database
+from infrastructure.database.repositories import (
+    SQLAlchemyActivityRepository,
+    SQLAlchemyAPIKeyRepository,
+    SQLAlchemyBuildingRepository,
+    SQLAlchemyOrganizationRepository,
+    SQLAlchemyUserRepository,
+)
 from punq import (
     Container,
     Scope,
@@ -37,10 +45,10 @@ from application.queries.api_key import (
     GetAPIKeyByKeyQueryHandler,
 )
 from application.queries.building import (
+    GetBuildingByAddressQuery,
+    GetBuildingByAddressQueryHandler,
     GetBuildingByIdQuery,
     GetBuildingByIdQueryHandler,
-    GetBuildingsQuery,
-    GetBuildingsQueryHandler,
 )
 from application.queries.organization import (
     GetOrganizationByIdQuery,
@@ -62,9 +70,7 @@ from application.queries.user import (
 )
 from domain.organization.interfaces.repositories.activity import BaseActivityRepository
 from domain.organization.interfaces.repositories.building import BaseBuildingRepository
-from domain.organization.interfaces.repositories.organization import (
-    BaseOrganizationRepository,
-)
+from domain.organization.interfaces.repositories.organization import BaseOrganizationRepository
 from domain.organization.services import (
     ActivityService,
     BuildingService,
@@ -76,14 +82,6 @@ from domain.user.services import (
     APIKeyService,
     UserService,
 )
-from infrastructure.database.repositories import (
-    SQLAlchemyActivityRepository,
-    SQLAlchemyAPIKeyRepository,
-    SQLAlchemyBuildingRepository,
-    SQLAlchemyOrganizationRepository,
-    SQLAlchemyUserRepository,
-)
-from infrastructure.database.gateways.postgres import Database
 from settings.config import Config
 
 
@@ -132,7 +130,7 @@ def _init_container() -> Container:
     container.register(GetActivityByIdQueryHandler)
     container.register(GetActivitiesQueryHandler)
     container.register(GetBuildingByIdQueryHandler)
-    container.register(GetBuildingsQueryHandler)
+    container.register(GetBuildingByAddressQueryHandler)
     container.register(GetOrganizationByIdQueryHandler)
     container.register(GetOrganizationsByAddressQueryHandler)
     container.register(GetOrganizationsByActivityQueryHandler)
@@ -182,8 +180,8 @@ def _init_container() -> Container:
             container.resolve(GetBuildingByIdQueryHandler),
         )
         mediator.register_query(
-            GetBuildingsQuery,
-            container.resolve(GetBuildingsQueryHandler),
+            GetBuildingByAddressQuery,
+            container.resolve(GetBuildingByAddressQueryHandler),
         )
         mediator.register_query(
             GetOrganizationByIdQuery,

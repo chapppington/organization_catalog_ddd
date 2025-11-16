@@ -1,6 +1,7 @@
 import pytest
 
 from application.commands.activity import CreateActivityCommand
+from application.exceptions.activity import ActivityWithThatNameAlreadyExistsException
 from application.mediator import Mediator
 from domain.organization.exceptions import (
     ActivityNestingLevelExceededException,
@@ -128,5 +129,29 @@ async def test_create_activity_command_max_nesting_level(
             CreateActivityCommand(
                 name="Exceeding level",
                 parent_id=last_activity.oid,
+            ),
+        )
+
+
+@pytest.mark.asyncio
+async def test_create_activity_command_duplicate_name(
+    mediator: Mediator,
+):
+    """Тест создания деятельности с дублирующимся названием."""
+    name = "Уникальное название"
+
+    activity, *_ = await mediator.handle_command(
+        CreateActivityCommand(
+            name=name,
+            parent_id=None,
+        ),
+    )
+    assert activity is not None
+
+    with pytest.raises(ActivityWithThatNameAlreadyExistsException):
+        await mediator.handle_command(
+            CreateActivityCommand(
+                name=name,
+                parent_id=None,
             ),
         )

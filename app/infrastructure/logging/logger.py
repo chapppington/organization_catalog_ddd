@@ -1,6 +1,7 @@
 import logging
 
 from infrastructure.logging.handler import LogstashHandler
+
 from settings.config import Config
 
 

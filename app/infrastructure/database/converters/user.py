@@ -1,12 +1,13 @@
+from infrastructure.database.models.user import (
+    APIKeyModel,
+    UserModel,
+)
+
 from domain.user.entities import (
     APIKeyEntity,
     UserEntity,
 )
 from domain.user.value_objects import UsernameValueObject
-from infrastructure.database.models.user import (
-    APIKeyModel,
-    UserModel,
-)
 
 
 def user_entity_to_model(entity: UserEntity) -> UserModel:

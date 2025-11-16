@@ -3,7 +3,7 @@ name = "organization-catalog-ddd"
 version = "0.1.0"
 description = "Organization Catalog DDD"
 authors = [
-    {name = "chapppington",email = "stas.mega.96@bk.ru"}
+    { name = "chapppington", email = "stas.mega.96@bk.ru" }
 ]
 readme = "README.md"
 requires-python = ">=3.13, <4.0"
@@ -20,7 +20,8 @@ dependencies = [
     "black (>=25.9.0,<26.0.0)",
     "greenlet (>=3.2.4,<4.0.0)",
     "bcrypt (>=5.0.0,<6.0.0)",
-    "authx (>=1.4.3,<2.0.0)"
+    "authx (>=1.4.3,<2.0.0)",
+    "geoalchemy2[shapely] (>=0.18.0,<0.19.0)"
 ]
 
 
@@ -31,10 +32,11 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.3.0"
 pytest = "^8.4.2"
-isort = "^7.0.0"
 faker = "^37.12.0"
 pytest-asyncio = "^1.2.0"
 
+[tool.ruff.lint]
+ignore = ["I"]
 
 [tool.isort]
 multi_line_output=3
@@ -59,7 +61,7 @@ skip_glob=[
     ".venv",
 ]
 known_fastapi=["fastapi","starlette"]
-known_first_party=["presentation","domain","infrastructure","application","settings","tests"]
+known_first_party=["application","domain","infra","logic","settings","tests"]
 sections=[
     "FUTURE",
     "STDLIB",

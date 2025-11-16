@@ -3,10 +3,7 @@ from abc import (
     abstractmethod,
 )
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Iterable,
-)
+from typing import Iterable
 from uuid import UUID
 
 from domain.organization.entities import BuildingEntity
@@ -24,4 +21,18 @@ class BaseBuildingRepository(ABC):
     async def get_by_address(self, address: str) -> BuildingEntity | None: ...
 
     @abstractmethod
-    async def filter(self, **filters: Any) -> Iterable[BuildingEntity]: ...
+    async def filter_by_radius(
+        self,
+        latitude: float,
+        longitude: float,
+        radius_meters: float,
+    ) -> Iterable[BuildingEntity]: ...
+
+    @abstractmethod
+    async def filter_by_bounding_box(
+        self,
+        lat_min: float,
+        lat_max: float,
+        lon_min: float,
+        lon_max: float,
+    ) -> Iterable[BuildingEntity]: ...

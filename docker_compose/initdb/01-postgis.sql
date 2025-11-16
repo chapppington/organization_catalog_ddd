@@ -1,0 +1,4 @@
+-- Автоматическое создание расширений PostGIS при инициализации базы данных
+CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE EXTENSION IF NOT EXISTS postgis_topology;
+CREATE EXTENSION IF NOT EXISTS postgis_raster;

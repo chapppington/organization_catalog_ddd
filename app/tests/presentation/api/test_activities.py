@@ -19,7 +19,7 @@ async def test_create_activity_success(
     api_key_headers: dict[str, str],
 ):
     url = app.url_path_for("create_activity")
-    name = faker.text()[:100]
+    name = f"TestActivity_{faker.uuid4()}"
     response: Response = client.post(
         url=url,
         json={"name": name},
@@ -81,7 +81,7 @@ async def test_get_activity_by_id_success(
 ):
     # Создаем деятельность
     create_url = app.url_path_for("create_activity")
-    name = faker.text()[:100]
+    name = f"TestActivity_{faker.uuid4()}"
     create_response: Response = client.post(
         url=create_url,
         json={"name": name},
@@ -129,7 +129,7 @@ async def test_get_activities_success(
 ):
     # Создаем несколько деятельностей
     create_url = app.url_path_for("create_activity")
-    names = [faker.text()[:50] for _ in range(3)]
+    names = [f"TestActivity_{faker.uuid4()}_{i}" for i in range(3)]
     created_ids = []
     for name in names:
         create_response: Response = client.post(
@@ -186,3 +186,36 @@ async def test_get_activities_with_filter(
     assert "items" in json_data["data"]
     assert len(json_data["data"]["items"]) >= 1
     assert any(item["name"] == unique_name for item in json_data["data"]["items"])
+
+
+@pytest.mark.asyncio
+async def test_create_activity_fail_duplicate_name(
+    app: FastAPI,
+    client: TestClient,
+    faker: Faker,
+    api_key_headers: dict[str, str],
+):
+    """Тест создания деятельности с дублирующимся названием."""
+    url = app.url_path_for("create_activity")
+    name = f"TestActivity_{faker.uuid4()}"
+
+    create_response: Response = client.post(
+        url=url,
+        json={"name": name},
+        headers=api_key_headers,
+    )
+    assert create_response.is_success
+
+    duplicate_response: Response = client.post(
+        url=url,
+        json={"name": name},
+        headers=api_key_headers,
+    )
+
+    assert duplicate_response.status_code == status.HTTP_400_BAD_REQUEST
+    json_data = duplicate_response.json()
+
+    assert json_data["errors"]
+    assert any(
+        "already exists" in error["message"].lower() for error in json_data["errors"]
+    )
