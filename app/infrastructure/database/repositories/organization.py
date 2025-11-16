@@ -1,8 +1,5 @@
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Iterable,
-)
+from typing import Iterable
 from uuid import UUID
 
 from infrastructure.database.converters.organization import (
@@ -67,11 +64,11 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
             result = res.scalar_one_or_none()
             return organization_model_to_entity(result) if result else None
 
-    async def get_by_name(self, name: str) -> OrganizationEntity | None:
+    async def get_by_name(self, name: str) -> Iterable[OrganizationEntity]:
         async with self.database.get_read_only_session() as session:
             stmt = (
                 select(OrganizationModel)
-                .where(OrganizationModel.name == name)
+                .where(OrganizationModel.name.ilike(f"%{name}%"))
                 .options(
                     selectinload(OrganizationModel.building),
                     selectinload(OrganizationModel.phones),
@@ -79,36 +76,41 @@ class SQLAlchemyOrganizationRepository(BaseOrganizationRepository):
                 )
             )
             res = await session.execute(stmt)
-            result = res.scalar_one_or_none()
-            return organization_model_to_entity(result) if result else None
+            results = [organization_model_to_entity(row) for row in res.scalars().all()]
+            return results
 
-    async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]:
+    async def get_by_building_id(
+        self, building_id: UUID,
+    ) -> Iterable[OrganizationEntity]:
         async with self.database.get_read_only_session() as session:
-            stmt = select(OrganizationModel).options(
-                selectinload(OrganizationModel.building),
-                selectinload(OrganizationModel.phones),
-                selectinload(OrganizationModel.activities),
+            stmt = (
+                select(OrganizationModel)
+                .where(OrganizationModel.building_id == building_id)
+                .options(
+                    selectinload(OrganizationModel.building),
+                    selectinload(OrganizationModel.phones),
+                    selectinload(OrganizationModel.activities),
+                )
             )
-
-            activity_joined = False
-            for field, value in filters.items():
-                if field == "activity_name":
-                    if not activity_joined:
-                        stmt = stmt.join(OrganizationModel.activities)
-                        activity_joined = True
-                    stmt = stmt.where(ActivityModel.name == value)
-                elif field == "name":
-                    stmt = stmt.where(OrganizationModel.name.ilike(f"%{value}%"))
-                else:
-                    try:
-                        field_obj = getattr(OrganizationModel, field)
-                        stmt = stmt.where(field_obj == value)
-                    except AttributeError:
-                        continue
-
-            if activity_joined:
-                stmt = stmt.distinct()
-
             res = await session.execute(stmt)
-            results = [organization_model_to_entity(row[0]) for row in res.all()]
+            results = [organization_model_to_entity(row) for row in res.scalars().all()]
+            return results
+
+    async def get_by_activity_name(
+        self, activity_name: str,
+    ) -> Iterable[OrganizationEntity]:
+        async with self.database.get_read_only_session() as session:
+            stmt = (
+                select(OrganizationModel)
+                .join(OrganizationModel.activities)
+                .where(ActivityModel.name == activity_name)
+                .distinct()
+                .options(
+                    selectinload(OrganizationModel.building),
+                    selectinload(OrganizationModel.phones),
+                    selectinload(OrganizationModel.activities),
+                )
+            )
+            res = await session.execute(stmt)
+            results = [organization_model_to_entity(row) for row in res.scalars().all()]
             return results

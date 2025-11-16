@@ -34,9 +34,10 @@ class OrganizationService:
         phones: list[str],
         activities: list[str],
     ) -> OrganizationEntity:
-        existing_organization = await self.organization_repository.get_by_name(name)
+        existing_organizations = await self.organization_repository.get_by_name(name)
 
-        if existing_organization:
+        # Проверяем точное совпадение имени
+        if any(org.name.as_generic_type() == name for org in existing_organizations):
             raise OrganizationWithThatNameAlreadyExistsException(
                 name=name,
             )
@@ -79,7 +80,7 @@ class OrganizationService:
         limit: int,
         offset: int,
     ) -> Tuple[Iterable[OrganizationEntity], int]:
-        organizations = list(await self.organization_repository.filter(name=name))
+        organizations = list(await self.organization_repository.get_by_name(name))
         total = len(organizations)
         return organizations[offset : offset + limit], total
 
@@ -94,8 +95,8 @@ class OrganizationService:
         if not building:
             return [], 0
 
-        organizations = await self.organization_repository.filter(
-            building_id=building.oid,
+        organizations = await self.organization_repository.get_by_building_id(
+            building.oid,
         )
         all_organizations = list(organizations)
 
@@ -135,8 +136,8 @@ class OrganizationService:
         # Ищем организации по каждой деятельности
         all_organizations = []
         for activity_name in activity_names:
-            organizations = await self.organization_repository.filter(
-                activity_name=activity_name,
+            organizations = await self.organization_repository.get_by_activity_name(
+                activity_name,
             )
             all_organizations.extend(organizations)
 
@@ -165,8 +166,8 @@ class OrganizationService:
         # Ищем организации в найденных зданиях
         all_organizations = []
         for building in buildings:
-            organizations = await self.organization_repository.filter(
-                address=building.address.as_generic_type(),
+            organizations = await self.organization_repository.get_by_building_id(
+                building.oid,
             )
             all_organizations.extend(organizations)
 
@@ -197,8 +198,8 @@ class OrganizationService:
         # Ищем организации в найденных зданиях
         all_organizations = []
         for building in buildings:
-            organizations = await self.organization_repository.filter(
-                address=building.address.as_generic_type(),
+            organizations = await self.organization_repository.get_by_building_id(
+                building.oid,
             )
             all_organizations.extend(organizations)
 

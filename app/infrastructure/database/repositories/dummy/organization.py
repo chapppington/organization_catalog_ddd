@@ -2,10 +2,8 @@ from dataclasses import (
     dataclass,
     field,
 )
-from typing import (
-    Any,
-    Iterable,
-)
+from typing import Iterable
+from uuid import UUID
 
 from domain.organization.entities import OrganizationEntity
 from domain.organization.interfaces.repositories.organization import BaseOrganizationRepository
@@ -29,49 +27,30 @@ class DummyInMemoryOrganizationRepository(BaseOrganizationRepository):
         except StopIteration:
             return None
 
-    async def get_by_name(self, name: str) -> OrganizationEntity | None:
-        try:
-            search_term = name.lower()
-            return next(
-                org
-                for org in self._saved_organizations
-                if org.name.as_generic_type().lower() == search_term
+    async def get_by_name(self, name: str) -> Iterable[OrganizationEntity]:
+        search_term = name.lower()
+        return [
+            org
+            for org in self._saved_organizations
+            if search_term in org.name.as_generic_type().lower()
+        ]
+
+    async def get_by_building_id(
+        self, building_id: UUID,
+    ) -> Iterable[OrganizationEntity]:
+        return [
+            org for org in self._saved_organizations if org.building.oid == building_id
+        ]
+
+    async def get_by_activity_name(
+        self, activity_name: str,
+    ) -> Iterable[OrganizationEntity]:
+        search_term = activity_name.lower()
+        return [
+            org
+            for org in self._saved_organizations
+            if any(
+                search_term in activity.name.as_generic_type().lower()
+                for activity in org.activities
             )
-        except StopIteration:
-            return None
-
-    async def filter(self, **filters: Any) -> Iterable[OrganizationEntity]:
-        results = self._saved_organizations.copy()
-
-        if "name" in filters and filters["name"]:
-            search_term = filters["name"].lower()
-            results = [
-                org
-                for org in results
-                if search_term in org.name.as_generic_type().lower()
-            ]
-
-        if "address" in filters and filters["address"]:
-            search_term = filters["address"].lower()
-            results = [
-                org
-                for org in results
-                if org.building.address.as_generic_type().lower() == search_term
-            ]
-
-        if "building_id" in filters and filters["building_id"]:
-            building_id = filters["building_id"]
-            results = [org for org in results if org.building.oid == building_id]
-
-        if "activity_name" in filters and filters["activity_name"]:
-            search_term = filters["activity_name"].lower()
-            results = [
-                org
-                for org in results
-                if any(
-                    search_term in activity.name.as_generic_type().lower()
-                    for activity in org.activities
-                )
-            ]
-
-        return results
+        ]
