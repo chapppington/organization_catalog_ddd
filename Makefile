@@ -4,6 +4,7 @@ STORAGES_CONTAINER = postgres
 LOGS = docker logs
 ENV = --env-file .env
 EXEC = docker exec -it
+EXEC_NO_TTY = docker exec
 APP_FILE = docker_compose/app.yaml
 APP_CONTAINER = main-app
 MONITORING_FILE = docker_compose/monitoring.yaml
@@ -58,7 +59,7 @@ migrations:
 
 .PHONY: migrate
 migrate:
-	${EXEC} ${APP_CONTAINER} alembic upgrade head
+	${EXEC_NO_TTY} ${APP_CONTAINER} alembic upgrade head
 
 .PHONY: test 
 test:
